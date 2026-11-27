@@ -8,12 +8,14 @@
 - **Chỉ dùng VND**. Không có ngoại tệ.
 - **Nhập sao kê ngân hàng nằm trong MVP**.
 - **Giao diện theo phong cách glassmorphism**.
+- **Ngân hàng: Techcombank**.
+- **Web app dùng tốt cả trên điện thoại và máy tính**, deploy lên cloud nên cần màn hình đăng nhập để bảo vệ dữ liệu.
+- **Giữ stack đề xuất ở mục 2**. Claude viết code; chủ app tạo các tài khoản dịch vụ (Vercel, Neon, Google OAuth).
 
 ### Giả định (cần xác nhận)
 
-- App chạy trên web (deploy lên cloud) để dùng được cả trên điện thoại, nên vẫn cần màn hình đăng nhập để bảo vệ dữ liệu.
-- Sao kê lấy từ file **Excel (.xlsx) hoặc CSV** tải từ internet banking. File PDF để sau, vì đọc PDF khó và dễ sai.
-- Một lập trình viên, chi phí hosting càng thấp càng tốt (gói miễn phí).
+- Sao kê Techcombank tải được dưới dạng **Excel (.xlsx) hoặc CSV**. Chưa xác nhận được điều này. Nếu Techcombank chỉ cho tải **PDF**, phải đưa phần đọc PDF vào MVP (giai đoạn 5 tăng thêm khoảng 2–3 ngày).
+- Chi phí hosting càng thấp càng tốt (gói miễn phí).
 
 ---
 
@@ -293,7 +295,7 @@ tests/
 
 - Chỉ `OWNER_EMAIL` được đăng nhập; mọi Server Action kiểm tra session trước khi làm gì.
 - Không lưu file sao kê gốc; không ghi số tiền, mô tả giao dịch vào log.
-- Fixture sao kê trong repo phải xóa số tài khoản, họ tên, nội dung cá nhân. Nếu repo công khai thì dùng dữ liệu giả.
+- **Repo đang ở chế độ công khai (public)**: tuyệt đối không đưa sao kê thật lên repo. Fixture sao kê chỉ dùng dữ liệu giả, dựng theo đúng cấu trúc cột của file Techcombank.
 - Bí mật chỉ nằm trong biến môi trường.
 - Bật backup tự động của Neon; có xuất CSV để tự lưu dữ liệu.
 
@@ -312,6 +314,7 @@ tests/
 | Rủi ro | Cách phòng |
 |---|---|
 | Định dạng sao kê khác nhau giữa các ngân hàng, hoặc ngân hàng đổi định dạng | Màn ghép cột + `import_profile`; fixture test cho từng ngân hàng |
+| Techcombank chỉ cho tải sao kê PDF | Xác nhận định dạng trước giai đoạn 5; nếu là PDF thì thêm bước đọc PDF vào MVP |
 | Nhập trùng hoặc thiếu giao dịch | `import_hash` + đối chiếu số dư cuối sao kê |
 | Chuyển tiền giữa 2 ví của mình bị tính 2 lần (chi ở ví A, thu ở ví B) | Cho đổi dòng thành chuyển khoản ở màn xem trước; tự ghép cặp ở giai đoạn 9 |
 | Glassmorphism khó đọc hoặc giật trên mobile | Kiểm tra tương phản và hiệu năng ngay ở giai đoạn 1 |
@@ -322,7 +325,5 @@ tests/
 
 ## 13. Câu hỏi còn mở
 
-1. **Bạn dùng ngân hàng / ví điện tử nào?** Mỗi nơi có định dạng sao kê khác nhau.
-2. **Có thể gửi 1 file sao kê mẫu không** (đã xóa số tài khoản và tên)? Đây là đầu vào quan trọng nhất cho giai đoạn 5.
-3. **Muốn chạy trên web (dùng được trên điện thoại) hay chỉ chạy trên máy tính?** Nếu chỉ chạy trên máy thì bỏ được đăng nhập và dùng SQLite.
-4. **Bạn quen stack nào?** Nếu không quen React/Next.js có thể đổi stack cho phù hợp.
+1. **Techcombank cho tải sao kê dạng gì** (Excel, CSV hay PDF)?
+2. **Tên các cột và cách ghi ngày/số tiền** trong file sao kê (gửi bằng dữ liệu giả, không gửi sao kê thật).
