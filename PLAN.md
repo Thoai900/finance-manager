@@ -12,11 +12,10 @@
 - **Web app dùng tốt cả trên điện thoại và máy tính**, deploy lên cloud nên cần màn hình đăng nhập để bảo vệ dữ liệu.
 - **Giữ stack đề xuất ở mục 2**. Claude viết code; chủ app tạo các tài khoản dịch vụ (Vercel, Neon, Google OAuth).
 
-- **Sao kê Techcombank tải được dạng PDF và XLS**. MVP chỉ đọc **XLS** (dễ và chính xác hơn); đọc PDF để sau MVP.
+- **Sao kê Techcombank tải được dạng PDF và Excel (.xlsx)**. MVP chỉ đọc **.xlsx** (đã kiểm tra với file thật, xem mục 4); đọc PDF để sau MVP.
+- **Tạm thời chỉ có 1 tài khoản Techcombank**. App tạo sẵn ví này; vẫn giữ khả năng thêm ví (tiền mặt, ngân hàng khác) về sau.
 
-### Giả định (cần xác nhận)
-
-- File XLS có cùng các cột như bản PDF (xem mục 4). Cần một file XLS mẫu để kiểm tra.
+### Giả định
 - Chi phí hosting càng thấp càng tốt (gói miễn phí).
 
 ---
@@ -30,7 +29,7 @@
 3. **Giao dịch**: thu, chi, chuyển khoản giữa các ví. Gồm số tiền, ngày, danh mục, ghi chú.
 4. **Danh mục**: bộ mặc định (Ăn uống, Đi lại, Nhà ở, Lương…) + tự thêm/sửa. Tối đa 2 cấp.
 5. **Nhập sao kê ngân hàng** (chi tiết ở mục 4):
-   - Tải lên file XLS sao kê Techcombank, xem trước rồi mới lưu.
+   - Tải lên file .xlsx sao kê Techcombank, xem trước rồi mới lưu.
    - Chống nhập trùng.
    - Tự gợi ý danh mục theo quy tắc từ khóa.
 6. **Ngân sách tháng** theo danh mục, có cảnh báo khi vượt.
@@ -69,7 +68,7 @@ Vì chỉ có một người dùng, **bỏ bảng `users` và cột `user_id`**.
 
 **accounts** (ví): `id`, `name`, `type` (cash | bank | credit | ewallet), `bank_code` (nullable, ví dụ VCB, TCB), `initial_balance`, `archived`, `created_at`
 
-**categories**: `id`, `name`, `kind` (income | expense), `parent_id`, `icon`, `color`
+**categories**: `id`, `name`, `kind` (income | expense), `parent_id`, `icon`, `color`, `exclude_from_reports` (bỏ khỏi thống kê thu/chi và ngân sách, ví dụ "Chuyển sang tài khoản khác")
 
 **transactions**: `id`, `type` (income | expense | transfer), `amount`, `account_id`, `to_account_id`, `category_id`, `occurred_at`, `note`, `raw_description` (cột Diễn giải), `counterparty` (cột Đối tác), `counterparty_bank` (cột NH Đối tác), `import_batch_id` (nullable), `import_key` (nullable, unique theo ví — xem mục 4), `created_at`, `updated_at`
 
@@ -79,7 +78,7 @@ Vì chỉ có một người dùng, **bỏ bảng `users` và cột `user_id`**.
 
 **category_rules** (tự phân loại): `id`, `field` (counterparty | description), `pattern` (từ khóa, không phân biệt hoa thường/dấu), `category_id`, `priority`
 
-**settings**: `owner_name` (tên chủ tài khoản, viết không dấu như trên sao kê — dùng để nhận ra chuyển tiền cho chính mình)
+
 
 ### Quyết định quan trọng
 
@@ -93,7 +92,7 @@ Vì chỉ có một người dùng, **bỏ bảng `users` và cột `user_id`**.
 
 ## 4. Thiết kế tính năng nhập sao kê (Techcombank)
 
-### Cấu trúc file sao kê Techcombank (đã xem từ bản PDF)
+### Cấu trúc file sao kê Techcombank (đã kiểm tra với file PDF và .xlsx thật)
 
 - **Phần đầu**: tên ngân hàng, tiêu đề "Sổ phụ kiêm phiếu báo nợ/có", khoảng ngày (Từ ngày / Đến ngày), thông tin khách hàng.
 - **Bảng giao dịch chính**, 8 cột:
@@ -101,7 +100,7 @@ Vì chỉ có một người dùng, **bỏ bảng `users` và cột `user_id`**.
 | Cột | Ý nghĩa | Cách dùng |
 |---|---|---|
 | Ngày giao dịch | `dd/mm/yyyy` | Ngày giao dịch |
-| Đối tác | Tên người/đơn vị nhận hoặc gửi | Tự phân loại, nhận ra chuyển cho chính mình |
+| Đối tác | Tên người/đơn vị nhận hoặc gửi | Tự phân loại |
 | NH Đối tác | Ngân hàng của đối tác | Lưu để tham khảo |
 | Diễn giải | Nội dung chuyển khoản | `raw_description`, tự phân loại |
 | Số bút toán | Mã giao dịch, dạng `FT…` | Khóa chống trùng |
@@ -113,13 +112,20 @@ Vì chỉ có một người dùng, **bỏ bảng `users` và cột `user_id`**.
 - **Phụ lục "Sinh lời tự động"** (nếu tài khoản bật tính năng này): một bảng riêng với cột khác, số âm ghi trong ngoặc `(3,215,328)`. Đây là tiền tự động chuyển qua lại với chứng chỉ tiền gửi, **không phải thu/chi**. Bảng chính đã tự cân đối mà không cần phụ lục, nên **bỏ qua toàn bộ phụ lục**.
 - **Lưu ý của ngân hàng**: "Ngày giao dịch" là ngày làm việc tiếp theo sau ngày phát sinh thực tế. Giao dịch cuối tuần sẽ mang ngày thứ Hai.
 
+### Đặc điểm riêng của file .xlsx
+
+- Chỉ 1 sheet, dàn trang như bản in: rất nhiều ô gộp (merged), mỗi cột trải trên nhiều cột Excel; giữa các giao dịch có dòng trống.
+- **Mọi ô đều là chữ (text)**, kể cả ngày (`29/10/2026`) và số tiền (`2,000,000`). Không có ô kiểu số hay kiểu ngày.
+- Vị trí cột của phụ lục khác bảng chính, và "Số dư cuối kỳ" nằm ở cột khác với cột Số dư. → **Xác định cột theo chữ trong dòng tiêu đề**, không cố định theo ký tự cột (B, H, Q…).
+- Kiểm tra thử với file 29/10–27/11/2026: đọc được 96 giao dịch; tổng Nợ và tổng Có khớp đúng dòng "Cộng doanh số"; đầu kỳ + Có − Nợ = cuối kỳ. 3 dòng không có Số bút toán; hơn một nửa số dòng có cụm `NGAY dd/mm/yyyy` trong Diễn giải.
+
 ### Luồng người dùng
 
-1. Chọn ví Techcombank → tải file XLS lên.
+1. Chọn ví Techcombank → tải file .xlsx lên.
 2. **Màn hình xem trước**: bảng các dòng sẽ nhập, mỗi dòng có:
    - danh mục được gợi ý (sửa được),
    - đánh dấu "trùng — bỏ qua",
-   - gợi ý "chuyển khoản sang ví khác" nếu đối tác là chính mình (sửa được).
+   - đổi được dòng thành "chuyển khoản sang ví khác" (khi sau này có thêm ví).
    - Phía trên bảng: số dư đầu kỳ, số dư cuối kỳ, kết quả đối chiếu.
 3. Bấm "Nhập" → lưu trong **một transaction DB** (lỗi thì không lưu dòng nào).
 4. Hiện tổng kết: đã nhập X, bỏ qua Y trùng.
@@ -128,14 +134,15 @@ Chỉ có một ngân hàng nên **không làm màn hình ghép cột** ở MVP;
 
 ### Xử lý kỹ thuật
 
-- **Tìm bảng**: dò dòng tiêu đề có "Ngày giao dịch" và "Số bút toán"; dừng khi gặp "Cộng doanh số". Bỏ mọi thứ phía sau (kể cả phụ lục).
-- **Parse ngày** `dd/mm/yyyy`; nếu ô là kiểu ngày số của Excel thì chuyển đổi riêng.
+- **Tìm bảng**: dò dòng tiêu đề đầu tiên có "Ngày giao dịch" và "Số bút toán", ghi lại cột của từng tiêu đề; bỏ dòng trống; dừng khi gặp "Cộng doanh số". Bỏ mọi thứ phía sau (kể cả phụ lục).
+- **Parse ngày** dạng chữ `dd/mm/yyyy`.
 - **Ngày thực tế**: nếu Diễn giải có cụm `NGAY dd/mm/yyyy` (thanh toán thẻ/ví), lấy ngày đó làm `occurred_at`; không có thì dùng Ngày giao dịch. Giúp giao dịch cuối tháng không bị đẩy sang tháng sau.
 - **Parse số tiền**: Techcombank dùng **dấu phẩy** phân cách nghìn (`2,000,000`); số âm dạng `(...)`. Ô trống = 0.
 - **Chống trùng**: `import_key` = Số bút toán. Một số dòng không có Số bút toán (ví dụ trả lãi) → dùng `hash(ngày, số tiền, chiều tiền, diễn giải đã chuẩn hóa, số thứ tự trong ngày)`. Nhập lại cùng file → 0 dòng mới. Hai file có khoảng ngày chồng nhau cũng không bị trùng.
 - **Tự phân loại**: so khớp quy tắc với `counterparty` và `raw_description` (đã bỏ dấu, viết thường) theo `priority`.
   - Khi sửa danh mục ở màn xem trước, gợi ý tạo quy tắc mới (ví dụ Đối tác "HIGHLANDS COFFEE" → Ăn uống).
-  - Lưu ý: tên chủ tài khoản thường tự xuất hiện trong Diễn giải của mọi lần chuyển tiền đi ("… chuyen tien"), nên **chỉ dùng cột Đối tác** để nhận ra chuyển cho chính mình.
+  - Lưu ý: tên chủ tài khoản tự xuất hiện trong Diễn giải của mọi lần chuyển tiền đi ("… chuyen tien"), nên quy tắc theo tên người nhận phải dùng cột Đối tác.
+  - Tiền chuyển sang tài khoản của chính mình ở ngân hàng khác: vì chưa theo dõi ví đó, xếp vào danh mục riêng "Chuyển sang tài khoản khác" và **không tính vào chi tiêu** trên dashboard/ngân sách.
 - **Lãi tiền gửi / Sinh lời**: các dòng như "Tra lai so du", "Thanh toan loi nhuan Sinh loi" → danh mục thu "Tiền lãi". Dòng "Chuyen tien loi … sang diem Upoint" là tiền ra tương ứng → danh mục chi riêng, để thu/chi tháng không bị phóng đại.
 - **Đối chiếu số dư** (bắt buộc ở bảng chính):
   - `đầu kỳ + tổng Có − tổng Nợ = cuối kỳ`, và tổng Nợ/Có khớp dòng "Cộng doanh số". Sai → báo lỗi đọc file, không cho nhập.
@@ -194,7 +201,7 @@ src/
   server/
     queries/  actions/
     import/
-      parse.ts         # đọc XLS Techcombank thành dòng thô
+      parse.ts         # đọc .xlsx Techcombank thành dòng thô
       normalize.ts     # dòng thô → giao dịch chuẩn
       dedupe.ts        # tính import_key
       categorize.ts    # áp quy tắc danh mục
@@ -266,14 +273,14 @@ tests/
 
 ### Giai đoạn 5 — Nhập sao kê Techcombank (3–4 ngày)
 
-- Bộ đọc XLS Techcombank: `parse` → `normalize` → `dedupe` → `categorize` như mục 4.
+- Bộ đọc .xlsx Techcombank: `parse` → `normalize` → `dedupe` → `categorize` như mục 4.
 - Màn xem trước; lưu trong một transaction DB.
 - Đối chiếu số dư, lịch sử nhập, hoàn tác cả lần nhập.
-- Quản lý `category_rules`, cài đặt `owner_name`; seed vài quy tắc phổ biến (MOCA/Grab, Highlands, Shopee, điện, nước, lãi tiền gửi…).
+- Quản lý `category_rules`; seed vài quy tắc phổ biến (MOCA/Grab, Highlands, Shopee, điện, nước, lãi tiền gửi…).
 
 **Kiểm tra:**
-- Unit test với file XLS giả có đúng cấu trúc Techcombank (gồm dòng đầu kỳ, cuối kỳ, dòng không có Số bút toán, phụ lục Sinh lời): số dòng, tổng Nợ/Có và số dư cuối khớp.
-- Chạy thử trên file XLS thật của bạn **ngay trong máy/phiên làm việc**, không đưa lên repo: tổng Nợ/Có khớp dòng "Cộng doanh số".
+- Unit test với file .xlsx giả có đúng cấu trúc Techcombank (gồm dòng đầu kỳ, cuối kỳ, dòng không có Số bút toán, phụ lục Sinh lời): số dòng, tổng Nợ/Có và số dư cuối khớp.
+- Chạy thử trên file .xlsx thật của bạn **ngay trong máy/phiên làm việc**, không đưa lên repo: tổng Nợ/Có khớp dòng "Cộng doanh số".
 - Nhập cùng một file 2 lần → lần 2 nhập 0 dòng.
 - Số dư app sau khi nhập = số dư cuối trên sao kê.
 - Hoàn tác một lần nhập → số dư quay về như trước.
@@ -345,7 +352,6 @@ tests/
 | Rủi ro | Cách phòng |
 |---|---|
 | Techcombank đổi định dạng file sao kê | Đối chiếu số dư bắt buộc → phát hiện ngay và từ chối nhập; sửa bộ đọc + fixture |
-| File XLS khác cấu trúc bản PDF | Kiểm tra bằng file XLS thật trước khi bắt đầu giai đoạn 5 |
 | Nhập trùng hoặc thiếu giao dịch | `import_key` (Số bút toán) + đối chiếu số dư bắt buộc |
 | Chuyển tiền giữa 2 ví của mình bị tính 2 lần (chi ở ví A, thu ở ví B) | Cho đổi dòng thành chuyển khoản ở màn xem trước; tự ghép cặp ở giai đoạn 9 |
 | Glassmorphism khó đọc hoặc giật trên mobile | Kiểm tra tương phản và hiệu năng ngay ở giai đoạn 1 |
@@ -356,5 +362,4 @@ tests/
 
 ## 13. Câu hỏi còn mở
 
-1. **File XLS mẫu**: gửi lên phiên chat giống cách đã gửi file PDF (không đưa lên GitHub), để xác nhận cấu trúc giống bản PDF.
-2. **Ngoài Techcombank, bạn có tài khoản/ví khác hay chuyển tiền qua lại không** (ví dụ tài khoản ngân hàng khác, ví MoMo, tiền mặt)? Để tạo sẵn các ví đó.
+Không còn câu hỏi chặn. Có thể bắt đầu Giai đoạn 0.
