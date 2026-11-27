@@ -1,13 +1,19 @@
 # Kế hoạch xây dựng Web App Quản lý Tài chính Cá nhân
 
-## 0. Giả định (cần xác nhận trước khi code)
+## 0. Bối cảnh & giả định
 
-- Đây là app **tài chính cá nhân**, không phải phần mềm kế toán doanh nghiệp.
-- Mỗi người dùng có tài khoản riêng và chỉ thấy dữ liệu của mình (chưa có ví chung gia đình).
-- Tiền tệ chính là **VND**. Đa tiền tệ để sau MVP.
-- Web responsive, dùng tốt trên điện thoại. Không làm app native.
-- Một lập trình viên, triển khai lên cloud chi phí thấp (gói miễn phí nếu được).
-- Nhập giao dịch thủ công. Không kết nối API ngân hàng ở MVP.
+### Đã chốt
+
+- **Chỉ một người dùng** (chủ app). Không có đăng ký, không ví chung.
+- **Chỉ dùng VND**. Không có ngoại tệ.
+- **Nhập sao kê ngân hàng nằm trong MVP**.
+- **Giao diện theo phong cách glassmorphism**.
+
+### Giả định (cần xác nhận)
+
+- App chạy trên web (deploy lên cloud) để dùng được cả trên điện thoại, nên vẫn cần màn hình đăng nhập để bảo vệ dữ liệu.
+- Sao kê lấy từ file **Excel (.xlsx) hoặc CSV** tải từ internet banking. File PDF để sau, vì đọc PDF khó và dễ sai.
+- Một lập trình viên, chi phí hosting càng thấp càng tốt (gói miễn phí).
 
 ---
 
@@ -15,18 +21,22 @@
 
 ### Có trong MVP
 
-1. **Đăng nhập / đăng ký** (Google OAuth).
+1. **Đăng nhập** chỉ cho một email (Google OAuth + danh sách cho phép đúng 1 email).
 2. **Ví / tài khoản**: tiền mặt, ngân hàng, thẻ tín dụng, ví điện tử. Mỗi ví có số dư ban đầu.
 3. **Giao dịch**: thu, chi, chuyển khoản giữa các ví. Gồm số tiền, ngày, danh mục, ghi chú.
-4. **Danh mục**: bộ danh mục mặc định (Ăn uống, Đi lại, Nhà ở, Lương…) + người dùng tự thêm/sửa. Tối đa 2 cấp (cha/con).
-5. **Ngân sách tháng** theo danh mục, hiển thị % đã dùng và cảnh báo khi vượt.
-6. **Dashboard**: tổng số dư, thu/chi tháng này, biểu đồ chi theo danh mục, xu hướng 6 tháng.
-7. **Lọc & tìm kiếm** giao dịch (theo khoảng ngày, ví, danh mục, từ khóa).
-8. **Xuất CSV** danh sách giao dịch.
+4. **Danh mục**: bộ mặc định (Ăn uống, Đi lại, Nhà ở, Lương…) + tự thêm/sửa. Tối đa 2 cấp.
+5. **Nhập sao kê ngân hàng** (chi tiết ở mục 4):
+   - Tải lên file .xlsx/.csv, ghép cột, xem trước rồi mới lưu.
+   - Chống nhập trùng.
+   - Tự gợi ý danh mục theo quy tắc từ khóa.
+6. **Ngân sách tháng** theo danh mục, có cảnh báo khi vượt.
+7. **Dashboard**: tổng số dư, thu/chi tháng, chi theo danh mục, xu hướng 6 tháng.
+8. **Lọc & tìm kiếm** giao dịch, **xuất CSV**.
 
-### Không có trong MVP (để giai đoạn sau)
+### Không có trong MVP
 
-- Giao dịch định kỳ, nhập CSV/sao kê ngân hàng, đa tiền tệ, mục tiêu tiết kiệm, đầu tư, ví chung, quét hóa đơn (OCR), thông báo email/push.
+- Giao dịch định kỳ, mục tiêu tiết kiệm, đọc sao kê PDF, PWA, thông báo.
+- Đã loại hẳn (không cần theo yêu cầu): đa tiền tệ, nhiều người dùng, ví chung.
 
 ---
 
@@ -34,207 +44,285 @@
 
 | Lớp | Lựa chọn | Lý do |
 |---|---|---|
-| Framework | **Next.js (App Router) + TypeScript** | Frontend + backend trong một repo, Server Actions giảm code API |
-| UI | **Tailwind CSS + shadcn/ui** | Component có sẵn (form, table, dialog), dễ làm responsive |
-| Biểu đồ | **Recharts** | Đơn giản, đủ cho pie/bar/line |
-| Database | **PostgreSQL** (Neon hoặc Supabase) | Quan hệ rõ ràng, có gói miễn phí |
-| ORM | **Prisma** | Schema + migration dễ đọc, type-safe |
-| Auth | **Auth.js (NextAuth v5)** | Tích hợp Google OAuth nhanh, lưu session vào DB |
-| Validation | **Zod** | Dùng chung schema cho form và server |
-| Test | **Vitest** + **Playwright** | Unit/integration + E2E |
-| Deploy | **Vercel** | Deploy Next.js một bước, preview mỗi PR |
-
-Phương án đơn giản hơn nếu chỉ dùng một mình: bỏ auth, dùng SQLite, chạy local. Nên quyết định ở bước 0.
+| Framework | **Next.js (App Router) + TypeScript** | Frontend + backend chung một repo, Server Actions |
+| UI | **Tailwind CSS + shadcn/ui** | Dễ tùy biến thành phong cách glass, có sẵn form/table/dialog |
+| Biểu đồ | **Recharts** | Tùy chỉnh màu/nền trong suốt dễ dàng |
+| Database | **PostgreSQL** (Neon) | Gói miễn phí, có backup |
+| ORM | **Prisma** | Schema + migration dễ đọc |
+| Auth | **Auth.js** – Google, session JWT, chỉ cho phép `OWNER_EMAIL` | Không cần bảng user/session trong DB |
+| Đọc file sao kê | **SheetJS (xlsx)** + **Papa Parse** (CSV) | Đọc được cả .xls/.xlsx/.csv |
+| Validation | **Zod** | Dùng chung cho form và dữ liệu import |
+| Test | **Vitest** + **Playwright** | Unit + E2E |
+| Deploy | **Vercel** | Deploy một bước |
 
 ---
 
 ## 3. Mô hình dữ liệu
 
+Vì chỉ có một người dùng, **bỏ bảng `users` và cột `user_id`**. Mọi bảo vệ dữ liệu nằm ở lớp đăng nhập.
+
 ### Các bảng
 
-**users**: `id`, `email`, `name`, `created_at`
+**accounts** (ví): `id`, `name`, `type` (cash | bank | credit | ewallet), `bank_code` (nullable, ví dụ VCB, TCB), `initial_balance`, `archived`, `created_at`
 
-**accounts** (ví): `id`, `user_id`, `name`, `type` (cash | bank | credit | ewallet), `initial_balance`, `archived`, `created_at`
+**categories**: `id`, `name`, `kind` (income | expense), `parent_id`, `icon`, `color`
 
-**categories**: `id`, `user_id`, `name`, `kind` (income | expense), `parent_id` (nullable), `icon`, `color`
+**transactions**: `id`, `type` (income | expense | transfer), `amount`, `account_id`, `to_account_id`, `category_id`, `occurred_at`, `note`, `raw_description` (nội dung gốc từ sao kê), `import_batch_id` (nullable), `import_hash` (nullable, unique theo ví), `created_at`, `updated_at`
 
-**transactions**: `id`, `user_id`, `type` (income | expense | transfer), `amount`, `account_id`, `to_account_id` (chỉ dùng cho transfer), `category_id` (null với transfer), `occurred_at`, `note`, `created_at`, `updated_at`
+**budgets**: `id`, `category_id`, `month` (YYYY-MM), `amount` — unique (`category_id`, `month`)
 
-**budgets**: `id`, `user_id`, `category_id`, `month` (YYYY-MM), `amount` — unique (`user_id`, `category_id`, `month`)
+**import_batches**: `id`, `account_id`, `file_name`, `row_count`, `imported_count`, `skipped_count`, `created_at`
+
+**import_profiles** (cấu hình ghép cột theo ngân hàng): `id`, `name`, `bank_code`, `header_row`, `column_map` (JSON), `date_format`, `amount_mode` (một cột có dấu ± | hai cột Nợ/Có)
+
+**category_rules** (tự phân loại): `id`, `pattern` (từ khóa, không phân biệt hoa thường/dấu), `category_id`, `priority`
 
 ### Quyết định quan trọng
 
-- **Tiền lưu dạng số nguyên (BIGINT, đơn vị đồng)**, không bao giờ dùng float. `amount` luôn dương, chiều tiền do `type` quyết định.
-- **Số dư ví được tính, không lưu**: `số dư = initial_balance + tổng thu − tổng chi + chuyển vào − chuyển ra`. Tránh lệch số khi sửa/xóa giao dịch.
-- **Chuyển khoản là 1 dòng** có `account_id` (nguồn) và `to_account_id` (đích). Không tính vào thu/chi trong báo cáo.
-- **Mọi truy vấn đều lọc theo `user_id`** của session — đặt trong một lớp truy cập dữ liệu chung để không quên.
-- **Thời gian**: lưu `timestamptz`, hiển thị và chia tháng theo múi giờ `Asia/Ho_Chi_Minh`.
-- Index: `transactions(user_id, occurred_at)`, `transactions(account_id)`, `transactions(category_id)`.
+- **Tiền lưu BIGINT (đơn vị đồng)**, không dùng float. `amount` luôn dương, chiều tiền do `type` quyết định.
+- **Số dư ví được tính từ giao dịch**, không lưu riêng: `initial_balance + thu − chi + chuyển vào − chuyển ra`.
+- **Chuyển khoản là 1 dòng** (`account_id` → `to_account_id`), không tính vào thu/chi.
+- **Thời gian** lưu `timestamptz`, chia tháng theo `Asia/Ho_Chi_Minh`.
+- Index: `transactions(occurred_at)`, `transactions(account_id, import_hash)`, `transactions(category_id)`.
 
 ---
 
-## 4. Cấu trúc thư mục
+## 4. Thiết kế tính năng nhập sao kê
+
+### Luồng người dùng
+
+1. Chọn ví ngân hàng → tải file lên.
+2. App tự nhận diện cấu hình (`import_profile`) theo tên cột. Nếu không nhận ra → màn hình **ghép cột**: chọn cột Ngày, Mô tả, Ghi nợ, Ghi có (hoặc Số tiền), Số dư. Lưu lại thành profile cho lần sau.
+3. **Màn hình xem trước**: bảng các dòng sẽ nhập, mỗi dòng có:
+   - danh mục được gợi ý (sửa được),
+   - đánh dấu "trùng — bỏ qua",
+   - nút chuyển dòng thành "chuyển khoản sang ví khác".
+4. Bấm "Nhập" → lưu trong **một transaction DB** (lỗi thì không lưu dòng nào).
+5. Hiện tổng kết: đã nhập X, bỏ qua Y trùng.
+
+### Xử lý kỹ thuật
+
+- **Parse ngày** theo `dd/mm/yyyy` (định dạng phổ biến ở ngân hàng VN). Nếu file có ô ngày kiểu số của Excel thì chuyển đổi riêng.
+- **Parse số tiền**: bỏ dấu `.`/`,` phân cách nghìn, xử lý số âm dạng `-` hoặc `(...)`.
+- **Bỏ dòng rác**: tiêu đề, tổng cộng, dòng trống ở đầu/cuối file.
+- **Chống trùng**: `import_hash = hash(account_id, ngày, số tiền, chiều tiền, mô tả đã chuẩn hóa, số thứ tự nếu trùng trong cùng ngày)`. Nhập lại cùng file → 0 dòng mới.
+- **Tự phân loại**: so khớp `raw_description` (đã bỏ dấu tiếng Việt, viết thường) với `category_rules` theo `priority`.
+  - Khi người dùng sửa danh mục ở màn xem trước, gợi ý tạo quy tắc mới (ví dụ "GRAB" → Đi lại).
+- **Đối chiếu số dư**: nếu sao kê có cột Số dư, so số dư cuối sao kê với số dư app tính được và cảnh báo nếu lệch. Đây là cách phát hiện nhập thiếu/sai.
+- **Không lưu file gốc**: file chỉ được đọc trong bộ nhớ rồi bỏ, vì sao kê chứa thông tin nhạy cảm.
+
+---
+
+## 5. Thiết kế giao diện Glassmorphism
+
+### Nguyên tắc
+
+- **Nền**: gradient nhiều màu hoặc mesh gradient (tím – xanh dương – hồng), có vài "đốm màu" mờ (blob) phía sau để hiệu ứng kính nổi bật.
+- **Thẻ kính** (card, sidebar, dialog):
+  - `backdrop-filter: blur(16–24px)`,
+  - nền trắng độ trong 10–15% (chế độ tối: đen 20–30%),
+  - viền 1px trắng 20–30%, bo góc 16–24px, bóng đổ mềm.
+- **Chữ & số tiền**: phải đạt độ tương phản WCAG AA (≥ 4.5:1) trên nền kính. Số tiền dùng font số đều (`tabular-nums`), cỡ lớn, đậm. Thu màu xanh lá, chi màu đỏ/hồng, đủ sáng để đọc trên nền mờ.
+- **Biểu đồ**: nền trong suốt, đường lưới mờ, màu đồng bộ với gradient nền.
+- Có cả **chế độ sáng và tối**. Chế độ tối thường hợp glassmorphism hơn, nên đặt làm mặc định.
+
+### Thành phần dùng chung (bọc lại shadcn/ui)
+
+- `GlassCard`, `GlassPanel` (sidebar/thanh điều hướng dưới trên mobile), `GlassDialog`, `GlassInput`, `GlassButton`, `StatTile` (thẻ con số trên dashboard).
+- Khai báo token trong Tailwind config: độ mờ, độ trong, màu viền, bóng. Không viết số cứng rải rác trong code.
+
+### Rủi ro riêng của phong cách này
+
+- **Hiệu năng trên điện thoại**: `backdrop-filter` tốn GPU. Không lồng kính trong kính, chỉ làm mờ các lớp lớn, tắt blur cho từng dòng trong bảng dài.
+- **Khó đọc**: bảng giao dịch và màn xem trước sao kê có nhiều chữ → dùng nền kính đục hơn (độ trong 25–40%) ở các vùng này.
+- **Trình duyệt không hỗ trợ**: dùng `@supports (backdrop-filter: blur())` để chuyển về nền đặc bán trong suốt.
+- Tôn trọng `prefers-reduced-transparency` / `prefers-reduced-motion` nếu trình duyệt có hỗ trợ.
+
+---
+
+## 6. Cấu trúc thư mục
 
 ```
 src/
   app/
-    (auth)/login/
+    login/
     (app)/
-      dashboard/
-      transactions/
-      accounts/
-      categories/
-      budgets/
-      settings/
+      dashboard/  transactions/  accounts/  categories/
+      budgets/  import/  settings/
     api/auth/[...nextauth]/
-  components/        # UI dùng chung (form, bảng, biểu đồ)
+    dev/ui/            # trang xem thử toàn bộ component glass (chỉ bật ở local)
+  components/
+    glass/             # GlassCard, GlassPanel, GlassDialog...
+    charts/  forms/
   lib/
-    db.ts            # Prisma client
-    auth.ts          # cấu hình Auth.js
-    money.ts         # định dạng & parse tiền VND
-    dates.ts         # xử lý tháng/múi giờ
+    db.ts  auth.ts
+    money.ts           # format/parse VND
+    dates.ts           # tháng & múi giờ
+    vn-text.ts         # bỏ dấu tiếng Việt, chuẩn hóa chuỗi
   server/
-    queries/         # đọc dữ liệu (luôn nhận userId)
-    actions/         # Server Actions ghi dữ liệu (validate bằng Zod)
-  schemas/           # Zod schema dùng chung
+    queries/  actions/
+    import/
+      parse.ts         # đọc xlsx/csv thành dòng thô
+      normalize.ts     # dòng thô → giao dịch chuẩn
+      dedupe.ts        # tính import_hash
+      categorize.ts    # áp quy tắc danh mục
+  schemas/
 prisma/
   schema.prisma
-  seed.ts            # danh mục mặc định
+  seed.ts              # danh mục + quy tắc mặc định
 tests/
   unit/  e2e/
+  fixtures/statements/ # file sao kê mẫu đã xóa thông tin cá nhân
 ```
 
 ---
 
-## 5. Màn hình
+## 7. Màn hình
 
-1. **Đăng nhập**: nút "Đăng nhập bằng Google".
-2. **Dashboard**: thẻ tổng số dư, thu/chi tháng, biểu đồ tròn chi theo danh mục, biểu đồ cột 6 tháng, 5 giao dịch gần nhất, ngân sách sắp vượt.
-3. **Giao dịch**: bảng có phân trang + bộ lọc; nút "+" mở form thêm nhanh (mặc định ngày hôm nay, ví dùng gần nhất).
-4. **Ví**: danh sách ví và số dư hiện tại; thêm/sửa/lưu trữ ví.
-5. **Danh mục**: danh sách thu/chi, thêm/sửa/xóa (chặn xóa nếu đang có giao dịch, hoặc yêu cầu chuyển sang danh mục khác).
-6. **Ngân sách**: chọn tháng, đặt hạn mức từng danh mục, thanh tiến độ; nút "copy từ tháng trước".
-7. **Cài đặt**: thông tin tài khoản, xuất CSV, xóa toàn bộ dữ liệu.
+1. **Đăng nhập**: một thẻ kính giữa màn hình, nút Google.
+2. **Dashboard**: các `StatTile` (tổng số dư, thu, chi tháng này), biểu đồ tròn theo danh mục, biểu đồ cột 6 tháng, giao dịch gần đây, ngân sách sắp vượt.
+3. **Giao dịch**: bảng + bộ lọc, nút "+" thêm nhanh. Lọc được theo "nhập từ sao kê" / "nhập tay".
+4. **Nhập sao kê**: tải file → ghép cột → xem trước → kết quả. Kèm lịch sử các lần nhập (có nút hoàn tác cả một lần nhập).
+5. **Ví**: danh sách ví và số dư.
+6. **Danh mục & quy tắc**: quản lý danh mục và quy tắc tự phân loại.
+7. **Ngân sách**: chọn tháng, đặt hạn mức, thanh tiến độ, copy từ tháng trước.
+8. **Cài đặt**: chế độ sáng/tối, xuất CSV, xóa dữ liệu.
 
 ---
 
-## 6. Lộ trình theo giai đoạn
+## 8. Lộ trình theo giai đoạn
 
 Ước lượng cho 1 người làm toàn thời gian. Làm bán thời gian thì nhân khoảng 2–3.
 
 ### Giai đoạn 0 — Khởi tạo dự án (1 ngày)
 
-- Tạo Next.js + TypeScript, Tailwind, shadcn/ui, ESLint, Prettier.
-- Kết nối Postgres, cài Prisma, migration đầu tiên.
-- Thiết lập CI (GitHub Actions): lint, typecheck, test.
-- Deploy bản trống lên Vercel.
+- Next.js + TypeScript, Tailwind, shadcn/ui, ESLint, Prettier.
+- Neon Postgres + Prisma, migration đầu tiên.
+- GitHub Actions: lint, typecheck, test. Deploy bản trống lên Vercel.
 
-**Kiểm tra:** trang chủ chạy trên URL Vercel; CI xanh.
+**Kiểm tra:** URL Vercel chạy được; CI xanh.
 
-### Giai đoạn 1 — Đăng nhập (1 ngày)
+### Giai đoạn 1 — Hệ thống giao diện glass (2 ngày)
 
-- Cấu hình Auth.js + Google OAuth, lưu user/session vào DB.
-- Middleware chặn mọi route `(app)` khi chưa đăng nhập.
-- Khi user mới đăng nhập lần đầu: seed danh mục mặc định.
+- Nền gradient, token trong Tailwind, các component `glass/*`, chế độ sáng/tối.
+- Trang `/dev/ui` hiển thị mọi component.
+- Layout chính: sidebar (desktop), thanh điều hướng dưới (mobile).
 
-**Kiểm tra:** chưa đăng nhập → bị chuyển về `/login`; đăng nhập xong → thấy dashboard trống và có danh mục mặc định.
+**Kiểm tra:**
+- Đo tương phản chữ/số tiền trên nền kính đạt ≥ 4.5:1 ở cả 2 chế độ.
+- Cuộn mượt trên điện thoại tầm trung (không giật khi cuộn trang `/dev/ui`).
+- Tắt `backdrop-filter` bằng DevTools → giao diện vẫn đọc được.
 
-### Giai đoạn 2 — Ví & Danh mục (2 ngày)
+### Giai đoạn 2 — Đăng nhập (0,5 ngày)
 
-- CRUD ví, CRUD danh mục (2 cấp).
-- `lib/money.ts`: format `1.250.000 ₫`, parse input người dùng gõ (`1.250.000`, `1250000`, `1,25tr` nếu muốn).
+- Auth.js + Google, chỉ chấp nhận `OWNER_EMAIL`. Middleware chặn mọi route `(app)`.
 
-**Kiểm tra:** unit test cho format/parse tiền; tạo/sửa/xóa ví và danh mục qua UI; user A không thấy dữ liệu user B.
+**Kiểm tra:** email khác đăng nhập → bị từ chối; chưa đăng nhập → về `/login`.
 
-### Giai đoạn 3 — Giao dịch (3–4 ngày)
+### Giai đoạn 3 — Ví & Danh mục (1,5 ngày)
 
-- Form thêm/sửa giao dịch (thu, chi, chuyển khoản), validate bằng Zod.
-- Danh sách giao dịch: phân trang, lọc theo ngày/ví/danh mục/loại, tìm theo ghi chú.
-- Hàm tính số dư ví theo công thức ở mục 3.
+- CRUD ví và danh mục. Seed danh mục mặc định.
+- `lib/money.ts`: format `1.250.000 ₫`, parse input.
 
-**Kiểm tra:** unit test tính số dư (gồm chuyển khoản, sửa, xóa giao dịch); E2E: thêm 1 khoản chi → số dư ví giảm đúng số tiền.
+**Kiểm tra:** unit test format/parse tiền; thao tác CRUD qua UI.
 
-### Giai đoạn 4 — Ngân sách (2 ngày)
+### Giai đoạn 4 — Giao dịch (3 ngày)
 
-- Đặt ngân sách tháng theo danh mục, copy từ tháng trước.
-- Tính đã chi / hạn mức, màu cảnh báo (≥80% vàng, >100% đỏ).
-- Ngân sách danh mục cha bao gồm chi của danh mục con.
+- Form thu/chi/chuyển khoản, danh sách + lọc + tìm kiếm, hàm tính số dư.
 
-**Kiểm tra:** unit test tính % ngân sách, kể cả giao dịch nằm sát ranh giới tháng (23:30 ngày cuối tháng giờ Việt Nam).
+**Kiểm tra:** unit test số dư (có chuyển khoản, sửa, xóa); E2E: thêm khoản chi → số dư giảm đúng.
 
-### Giai đoạn 5 — Dashboard & báo cáo (2–3 ngày)
+### Giai đoạn 5 — Nhập sao kê (4–5 ngày)
 
-- Truy vấn tổng hợp: thu/chi theo tháng, chi theo danh mục.
-- Biểu đồ tròn + cột + danh sách gần đây.
-- Trạng thái rỗng (empty state) cho user mới.
+- `parse` → `normalize` → `dedupe` → `categorize` như mục 4.
+- Màn ghép cột, lưu `import_profile`; màn xem trước; lưu trong một transaction DB.
+- Đối chiếu số dư, lịch sử nhập, hoàn tác cả lần nhập.
+- Quản lý `category_rules`, seed vài quy tắc phổ biến (GRAB, SHOPEE, điện, nước, lương…).
 
-**Kiểm tra:** với bộ dữ liệu seed cố định, số liệu dashboard khớp với tính tay; chuyển khoản không bị tính vào thu/chi.
+**Kiểm tra:**
+- Unit test với file sao kê mẫu thật (đã xóa thông tin cá nhân) của từng ngân hàng bạn dùng: số dòng và tổng nợ/có khớp với file.
+- Nhập cùng một file 2 lần → lần 2 nhập 0 dòng.
+- Số dư app sau khi nhập = số dư cuối trên sao kê.
+- Hoàn tác một lần nhập → số dư quay về như trước.
 
-### Giai đoạn 6 — Hoàn thiện & phát hành (2–3 ngày)
+### Giai đoạn 6 — Ngân sách (1,5 ngày)
 
-- Xuất CSV (UTF-8 có BOM để Excel đọc đúng tiếng Việt).
-- Responsive trên màn hình 375px, loading/error state, thông báo toast.
-- Rà soát bảo mật (mục 8), bật backup DB.
-- Viết README: cách chạy local, biến môi trường.
+- Đặt ngân sách tháng, copy từ tháng trước, cảnh báo ≥80% / >100%. Ngân sách danh mục cha tính cả danh mục con.
 
-**Kiểm tra:** toàn bộ E2E xanh; mở file CSV bằng Excel hiển thị đúng dấu; dùng thử trên điện thoại thật 1 tuần.
+**Kiểm tra:** unit test %, gồm giao dịch 23:30 ngày cuối tháng (giờ VN).
 
-**Tổng MVP: khoảng 2,5–3 tuần toàn thời gian.**
+### Giai đoạn 7 — Dashboard (2 ngày)
 
-### Giai đoạn 7 — Sau MVP (chọn theo nhu cầu thực tế)
+- Truy vấn tổng hợp, biểu đồ, empty state.
 
-1. Giao dịch định kỳ (tiền nhà, lương) — cron job tạo giao dịch tự động.
-2. Nhập CSV/sao kê ngân hàng, có bước xem trước và chống trùng.
-3. Mục tiêu tiết kiệm.
-4. PWA: cài lên màn hình chính, thêm giao dịch nhanh.
-5. Đa tiền tệ (lưu tiền tệ theo ví + tỷ giá theo ngày).
-6. Ví chung cho gia đình (bảng thành viên + phân quyền).
+**Kiểm tra:** với dữ liệu seed cố định, số liệu khớp với tính tay; chuyển khoản không bị tính vào thu/chi.
 
----
+### Giai đoạn 8 — Hoàn thiện & phát hành (2 ngày)
 
-## 7. Chiến lược kiểm thử
+- Xuất CSV (UTF-8 có BOM cho Excel), loading/error state, toast.
+- Rà soát bảo mật (mục 10), bật backup DB, viết README.
 
-- **Unit (Vitest)**: tập trung vào logic tiền — parse/format, tính số dư, tính ngân sách, chia tháng theo múi giờ. Đây là chỗ dễ sai nhất.
-- **Integration**: Server Actions chạy với DB test thật (Postgres trong Docker hoặc schema riêng), kiểm tra validate và lọc `user_id`.
-- **E2E (Playwright)**: 3–5 luồng chính — đăng nhập (mock), thêm ví, thêm giao dịch, đặt ngân sách, xem dashboard.
-- CI chạy toàn bộ trên mỗi PR.
+**Kiểm tra:** E2E xanh; dùng thật trên điện thoại 1 tuần với sao kê tháng gần nhất.
 
----
+**Tổng MVP: khoảng 3,5–4 tuần toàn thời gian.** Phần nhập sao kê và giao diện glass làm tăng khoảng 1 tuần so với bản cơ bản.
 
-## 8. Bảo mật & dữ liệu
+### Giai đoạn 9 — Sau MVP
 
-- Mọi Server Action: kiểm tra session → validate Zod → truy vấn kèm `user_id`. Không tin `user_id` gửi từ client.
-- Khi sửa/xóa theo `id`, luôn kiểm tra bản ghi thuộc user hiện tại.
-- Không log số tiền hay ghi chú vào log hệ thống.
-- Bí mật (OAuth secret, DATABASE_URL) chỉ nằm trong biến môi trường, không commit.
-- Bật backup tự động của nhà cung cấp DB; có chức năng xuất CSV để người dùng tự giữ dữ liệu.
+1. Giao dịch định kỳ (tiền nhà, lương).
+2. Tự ghép cặp chuyển khoản giữa 2 ví của mình (cùng số tiền, lệch ≤ 1 ngày).
+3. Đọc sao kê PDF.
+4. Mục tiêu tiết kiệm.
+5. PWA: cài lên màn hình chính.
 
 ---
 
-## 9. Triển khai
+## 9. Chiến lược kiểm thử
 
-- **Môi trường**: `local` (Docker Postgres) → `preview` (Vercel mỗi PR, DB branch của Neon) → `production`.
-- Migration chạy bằng `prisma migrate deploy` trong bước build production.
-- Biến môi trường: `DATABASE_URL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`.
+- **Unit (Vitest)**, ưu tiên các chỗ dễ sai nhất:
+  - parse/format tiền, bỏ dấu tiếng Việt,
+  - parse ngày sao kê, chống trùng, tự phân loại,
+  - tính số dư, tính ngân sách, chia tháng.
+- **Fixture sao kê**: mỗi ngân hàng một file mẫu trong `tests/fixtures/statements/`, kèm kết quả mong đợi (số dòng, tổng nợ, tổng có, số dư cuối).
+- **Integration**: Server Actions với DB test thật.
+- **E2E (Playwright)**: thêm giao dịch, nhập sao kê từ đầu đến cuối, đặt ngân sách, xem dashboard.
+- CI chạy toàn bộ mỗi lần push.
 
 ---
 
-## 10. Rủi ro chính
+## 10. Bảo mật & dữ liệu
+
+- Chỉ `OWNER_EMAIL` được đăng nhập; mọi Server Action kiểm tra session trước khi làm gì.
+- Không lưu file sao kê gốc; không ghi số tiền, mô tả giao dịch vào log.
+- Fixture sao kê trong repo phải xóa số tài khoản, họ tên, nội dung cá nhân. Nếu repo công khai thì dùng dữ liệu giả.
+- Bí mật chỉ nằm trong biến môi trường.
+- Bật backup tự động của Neon; có xuất CSV để tự lưu dữ liệu.
+
+---
+
+## 11. Triển khai
+
+- Môi trường: `local` (Docker Postgres) → `preview` (Vercel + Neon branch) → `production`.
+- `prisma migrate deploy` khi build production.
+- Biến môi trường: `DATABASE_URL`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `OWNER_EMAIL`.
+
+---
+
+## 12. Rủi ro chính
 
 | Rủi ro | Cách phòng |
 |---|---|
-| Sai số tiền do float | Lưu BIGINT, test parse/format |
-| Số dư lệch sau khi sửa/xóa | Tính số dư từ giao dịch, không lưu riêng |
-| Giao dịch bị tính sai tháng | Chia tháng theo `Asia/Ho_Chi_Minh`, test ranh giới |
-| Lộ dữ liệu giữa các user | Lớp truy vấn bắt buộc `userId` + integration test |
-| Phình phạm vi | Chốt danh sách MVP ở mục 1, mọi thứ khác vào giai đoạn 7 |
+| Định dạng sao kê khác nhau giữa các ngân hàng, hoặc ngân hàng đổi định dạng | Màn ghép cột + `import_profile`; fixture test cho từng ngân hàng |
+| Nhập trùng hoặc thiếu giao dịch | `import_hash` + đối chiếu số dư cuối sao kê |
+| Chuyển tiền giữa 2 ví của mình bị tính 2 lần (chi ở ví A, thu ở ví B) | Cho đổi dòng thành chuyển khoản ở màn xem trước; tự ghép cặp ở giai đoạn 9 |
+| Glassmorphism khó đọc hoặc giật trên mobile | Kiểm tra tương phản và hiệu năng ngay ở giai đoạn 1 |
+| Sai số tiền / sai tháng | BIGINT + múi giờ VN + unit test |
+| Phình phạm vi | Chốt mục 1, mọi thứ khác vào giai đoạn 9 |
 
 ---
 
-## 11. Câu hỏi cần trả lời trước khi bắt đầu
+## 13. Câu hỏi còn mở
 
-1. App chỉ cho riêng bạn dùng, hay cho nhiều người đăng ký?
-2. Có cần dùng chung với vợ/chồng/gia đình ngay từ đầu không?
-3. Có giao dịch ngoại tệ (USD…) thường xuyên không?
-4. Bạn đã quen stack nào (React/Next.js, Vue, Python/Django…)? Nếu khác, nên đổi stack cho phù hợp.
-5. Có muốn nhập sao kê ngân hàng sớm không? Nếu có, ngân hàng nào?
+1. **Bạn dùng ngân hàng / ví điện tử nào?** Mỗi nơi có định dạng sao kê khác nhau.
+2. **Có thể gửi 1 file sao kê mẫu không** (đã xóa số tài khoản và tên)? Đây là đầu vào quan trọng nhất cho giai đoạn 5.
+3. **Muốn chạy trên web (dùng được trên điện thoại) hay chỉ chạy trên máy tính?** Nếu chỉ chạy trên máy thì bỏ được đăng nhập và dùng SQLite.
+4. **Bạn quen stack nào?** Nếu không quen React/Next.js có thể đổi stack cho phù hợp.
