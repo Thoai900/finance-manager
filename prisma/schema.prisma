@@ -1,0 +1,140 @@
+// Mô hình dữ liệu: xem PLAN.md mục 3.
+// Tiền lưu BigInt (đơn vị đồng), luôn dương; chiều tiền do `type` quyết định.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AccountType {
+  cash
+  bank
+  credit
+  ewallet
+}
+
+enum CategoryKind {
+  income
+  expense
+}
+
+enum TransactionType {
+  income
+  expense
+  transfer
+}
+
+enum RuleField {
+  counterparty
+  description
+}
+
+model Account {
+  id             String      @id @default(cuid())
+  name           String
+  type           AccountType
+  bankCode       String?     @map("bank_code")
+  initialBalance BigInt      @default(0) @map("initial_balance")
+  archived       Boolean     @default(false)
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  transactions      Transaction[] @relation("TransactionAccount")
+  incomingTransfers Transaction[] @relation("TransactionToAccount")
+  importBatches     ImportBatch[]
+
+  @@map("accounts")
+}
+
+model Category {
+  id                 String       @id @default(cuid())
+  name               String
+  kind               CategoryKind
+  parentId           String?      @map("parent_id")
+  icon               String?
+  color              String?
+  excludeFromReports Boolean      @default(false) @map("exclude_from_reports")
+
+  parent       Category?      @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children     Category[]     @relation("CategoryTree")
+  transactions Transaction[]
+  budgets      Budget[]
+  rules        CategoryRule[]
+
+  @@map("categories")
+}
+
+model Transaction {
+  id               String          @id @default(cuid())
+  type             TransactionType
+  amount           BigInt
+  accountId        String          @map("account_id")
+  toAccountId      String?         @map("to_account_id")
+  categoryId       String?         @map("category_id")
+  occurredAt       DateTime        @map("occurred_at") @db.Timestamptz(6)
+  note             String?
+  rawDescription   String?         @map("raw_description")
+  counterparty     String?
+  counterpartyBank String?         @map("counterparty_bank")
+  importBatchId    String?         @map("import_batch_id")
+  importKey        String?         @map("import_key")
+  createdAt        DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  account     Account      @relation("TransactionAccount", fields: [accountId], references: [id], onDelete: Restrict)
+  toAccount   Account?     @relation("TransactionToAccount", fields: [toAccountId], references: [id], onDelete: Restrict)
+  category    Category?    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  importBatch ImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, importKey])
+  @@index([occurredAt])
+  @@index([categoryId])
+  @@index([toAccountId])
+  @@map("transactions")
+}
+
+model Budget {
+  id         String @id @default(cuid())
+  categoryId String @map("category_id")
+  month      String @db.Char(7) // YYYY-MM
+  amount     BigInt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, month])
+  @@map("budgets")
+}
+
+model ImportBatch {
+  id             String   @id @default(cuid())
+  accountId      String   @map("account_id")
+  fileName       String   @map("file_name")
+  periodFrom     DateTime @map("period_from") @db.Date
+  periodTo       DateTime @map("period_to") @db.Date
+  openingBalance BigInt   @map("opening_balance")
+  closingBalance BigInt   @map("closing_balance")
+  rowCount       Int      @map("row_count")
+  importedCount  Int      @map("imported_count")
+  skippedCount   Int      @map("skipped_count")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  account      Account       @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  transactions Transaction[]
+
+  @@map("import_batches")
+}
+
+model CategoryRule {
+  id         String    @id @default(cuid())
+  field      RuleField
+  pattern    String
+  categoryId String    @map("category_id")
+  priority   Int       @default(0)
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("category_rules")
+}
