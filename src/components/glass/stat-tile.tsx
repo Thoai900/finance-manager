@@ -20,7 +20,7 @@ export function StatTile({
       <p className="text-sm text-fg-muted">{label}</p>
       <p
         className={cn(
-          "mt-2 text-2xl font-semibold tabular-nums",
+          "mt-2 text-lg font-semibold whitespace-nowrap sm:text-2xl",
           tone === "income" && "text-income",
           tone === "expense" && "text-expense",
         )}

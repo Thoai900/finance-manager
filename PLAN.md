@@ -49,7 +49,7 @@
 |---|---|---|
 | Framework | **Next.js (App Router) + TypeScript** | Frontend + backend chung một repo, Server Actions |
 | UI | **Tailwind CSS** + component tự viết theo kiểu shadcn/ui, dùng **Radix UI** cho phần cần xử lý bàn phím/focus (dialog…) | Dễ tùy biến thành phong cách glass. Không dùng CLI shadcn vì môi trường làm việc không truy cập được registry của nó |
-| Biểu đồ | **Recharts** | Tùy chỉnh màu/nền trong suốt dễ dàng |
+| Biểu đồ | HTML/CSS tự viết (không dùng thư viện) | Chỉ có 2 biểu đồ đơn giản; dễ làm tooltip, bàn phím, bảng số liệu và hợp giao diện kính |
 | Database | **PostgreSQL** (Neon) | Gói miễn phí, có backup |
 | ORM | **Prisma** | Schema + migration dễ đọc |
 | Auth | **Auth.js** – Google, session JWT, chỉ cho phép `OWNER_EMAIL` | Không cần bảng user/session trong DB |
@@ -323,6 +323,13 @@ tests/
 - Truy vấn tổng hợp, biểu đồ, empty state.
 
 **Kiểm tra:** với dữ liệu seed cố định, số liệu khớp với tính tay; chuyển khoản không bị tính vào thu/chi.
+
+**Đã làm (ghi chú triển khai):**
+- 4 thẻ số: tổng số dư, thu, chi, chênh lệch tháng này.
+- Thu/chi 6 tháng: cột nhóm, một trục, chú thích, tooltip khi rê chuột và khi focus bằng bàn phím, kèm "Xem dạng bảng".
+- Chi theo danh mục: **thanh ngang xếp hạng** (thay cho biểu đồ tròn — so sánh các phần chính xác hơn), con gộp vào cha, tối đa 6 dòng (đuôi gộp "Khác").
+- Màu biểu đồ: xanh dương = Thu, cam = Chi — đã chạy bộ kiểm tra màu cho người mù màu trên nền sáng/tối; không dùng cặp xanh lá/đỏ. Cam trên nền sáng có tương phản thấp nên luôn có nhãn số + bảng đi kèm.
+- Ngân sách cần chú ý (từ 80%) và 5 giao dịch gần nhất; trang trống có lối tắt "Nhập sao kê"/"Thêm giao dịch".
 
 ### Giai đoạn 8 — Hoàn thiện & phát hành (2 ngày)
 
