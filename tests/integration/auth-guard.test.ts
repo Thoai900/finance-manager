@@ -18,6 +18,7 @@ const modules = {
   transactions: () => import("@/server/actions/transactions"),
   import: () => import("@/server/actions/import"),
   rules: () => import("@/server/actions/rules"),
+  budgets: () => import("@/server/actions/budgets"),
 };
 
 test("mọi Server Action đều từ chối khi chưa đăng nhập và không ghi dữ liệu", async () => {
@@ -36,7 +37,7 @@ test("mọi Server Action đều từ chối khi chưa đăng nhập và không 
       checked.push(`${name}.${fn}`);
     }
   }
-  expect(checked).toHaveLength(16);
+  expect(checked).toHaveLength(18);
   // Các file test khác chạy song song nên không so tổng số dòng; kiểm tra đúng dữ liệu bài này cố ghi.
   expect(await db.account.count({ where: { name: "__hacker__" } })).toBe(0);
   expect(await db.category.count({ where: { name: "__hacker__" } })).toBe(0);

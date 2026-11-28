@@ -312,6 +312,12 @@ tests/
 
 **Kiểm tra:** unit test %, gồm giao dịch 23:30 ngày cuối tháng (giờ VN).
 
+**Đã làm (ghi chú triển khai):**
+- Chỉ đặt ngân sách cho danh mục chi không bị đánh dấu "không tính vào thống kê"; chuyển khoản và khoản thu không tính.
+- Tổng ngân sách không tính trùng khi cả danh mục cha và con cùng có ngân sách (chỉ cộng ngân sách "trên cùng").
+- Trạng thái hiển thị bằng cả màu và chữ ("Sắp hết", "Vượt …"); thanh tiến độ có `role="progressbar"`.
+- Chép ngân sách tháng trước: chỉ thêm danh mục chưa có ngân sách ở tháng này.
+
 ### Giai đoạn 7 — Dashboard (2 ngày)
 
 - Truy vấn tổng hợp, biểu đồ, empty state.

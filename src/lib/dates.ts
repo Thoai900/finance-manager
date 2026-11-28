@@ -55,3 +55,37 @@ export function isoToDmy(isoDate: string): string {
   const [y, m, d] = isoDate.split("-");
   return `${d}/${m}/${y}`;
 }
+
+// ---- Tháng ("2026-11"), theo giờ Việt Nam ----
+
+const MONTH = /^(\d{4})-(0[1-9]|1[0-2])$/;
+
+export function isValidMonth(month: string): boolean {
+  return MONTH.test(month);
+}
+
+/** Tháng hiện tại theo giờ VN, "2026-11". */
+export function currentVnMonth(now = new Date()): string {
+  return toVnIsoDate(now).slice(0, 7);
+}
+
+/** Cộng/trừ tháng: shiftMonth("2026-01", -1) → "2025-12". */
+export function shiftMonth(month: string, delta: number): string {
+  const [y, m] = month.split("-").map(Number);
+  const index = y * 12 + (m - 1) + delta;
+  return `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`;
+}
+
+/** Khoảng [00:00 ngày 1, 00:00 ngày 1 tháng sau) giờ VN. */
+export function vnMonthRange(month: string): { gte: Date; lt: Date } {
+  return {
+    gte: vnDateToUtc(`${month}-01`)!,
+    lt: vnDateToUtc(`${shiftMonth(month, 1)}-01`)!,
+  };
+}
+
+/** "2026-11" → "Tháng 11/2026". */
+export function formatMonth(month: string): string {
+  const [y, m] = month.split("-");
+  return `Tháng ${Number(m)}/${y}`;
+}
