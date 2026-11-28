@@ -1,8 +1,8 @@
-import { connection } from "next/server";
 import type { Prisma } from "@/generated/prisma/client";
 import { vnDateRange } from "@/lib/dates";
 import { db } from "@/lib/db";
 import { normalizeVn } from "@/lib/vn-text";
+import { requireOwner } from "@/server/auth-guard";
 
 export const PAGE_SIZE = 50;
 /** Giá trị bộ lọc danh mục cho giao dịch thu/chi chưa có danh mục. */
@@ -75,7 +75,7 @@ export function buildTxWhere(f: TxFilters): Prisma.TransactionWhereInput {
 }
 
 export async function listTransactions(f: TxFilters) {
-  await connection();
+  await requireOwner();
   const where = buildTxWhere(f);
   const [items, total] = await Promise.all([
     db.transaction.findMany({
@@ -98,7 +98,7 @@ export async function listTransactions(f: TxFilters) {
 
 /** Ví của giao dịch nhập tay gần nhất, dùng làm ví mặc định khi thêm giao dịch. */
 export async function getLastUsedAccountId(): Promise<string | null> {
-  await connection();
+  await requireOwner();
   const last = await db.transaction.findFirst({
     where: { importBatchId: null, account: { archived: false } },
     orderBy: { createdAt: "desc" },

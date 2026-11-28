@@ -4,8 +4,7 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { type ActionResult, fail, OK } from "./result";
-
-// TODO(Giai đoạn 2): kiểm tra đăng nhập ở đầu mọi Server Action.
+import { requireOwner } from "../auth-guard";
 
 const baseSchema = z.object({
   name: z
@@ -44,6 +43,7 @@ async function checkParent(parentId: string, kind: "income" | "expense") {
 export async function createCategory(
   formData: FormData,
 ): Promise<ActionResult> {
+  await requireOwner();
   const parsed = createSchema.safeParse({
     ...readBase(formData),
     kind: formData.get("kind"),
@@ -63,6 +63,7 @@ export async function createCategory(
 export async function updateCategory(
   formData: FormData,
 ): Promise<ActionResult> {
+  await requireOwner();
   const id = String(formData.get("id") ?? "");
   const parsed = baseSchema.safeParse(readBase(formData));
   if (!parsed.success) return fail(parsed.error.issues[0].message);
@@ -91,6 +92,7 @@ export async function updateCategory(
 
 /** Xoá danh mục cũng xoá ngân sách và quy tắc phân loại của nó. */
 export async function deleteCategory(id: string): Promise<ActionResult> {
+  await requireOwner();
   const category = await db.category.findUnique({
     where: { id },
     include: { _count: { select: { children: true, transactions: true } } },

@@ -260,6 +260,11 @@ tests/
 
 **Kiểm tra:** email khác đăng nhập → bị từ chối; chưa đăng nhập → về `/login`.
 
+**Đã làm (ghi chú triển khai):**
+- Auth.js `next-auth@5.0.0-beta.32` (ghim phiên bản), Google, phiên JWT trong cookie, chỉ email `OWNER_EMAIL` đã được Google xác minh. Chưa đặt `OWNER_EMAIL` → không ai vào được.
+- Kiểm tra thật nằm ở `requireOwner()` (`src/server/auth-guard.ts`), gọi đầu mọi hàm đọc dữ liệu và mọi Server Action; `src/proxy.ts` chỉ chặn sớm khi chưa có cookie.
+- Test: mọi Server Action bị từ chối khi chưa đăng nhập (không ghi gì); E2E dùng cookie phiên ký bằng `AUTH_SECRET` của môi trường test (không có cửa sau trong app).
+
 ### Giai đoạn 3 — Ví & Danh mục (1,5 ngày)
 
 - CRUD ví và danh mục. Dữ liệu mặc định (ví Techcombank + danh mục) nằm trong một migration SQL, nên tự có ở mọi môi trường khi chạy `prisma migrate deploy`.

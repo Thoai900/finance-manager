@@ -75,7 +75,7 @@ test("nhập sao kê: xem trước, chọn danh mục, nhập, nhập lại bị
     buffer: xlsx,
   };
 
-  await page.goto("/import");
+  await page.goto("/import", { waitUntil: "networkidle" });
   await page
     .getByRole("combobox", { name: "Ví" })
     .selectOption({ label: accountName });

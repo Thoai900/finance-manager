@@ -7,8 +7,7 @@ import { db } from "@/lib/db";
 import { parseVnd } from "@/lib/money";
 import { buildSearchText } from "@/lib/vn-text";
 import { type ActionResult, fail, OK } from "./result";
-
-// TODO(Giai đoạn 2): kiểm tra đăng nhập ở đầu mọi Server Action.
+import { requireOwner } from "../auth-guard";
 
 const MAX_AMOUNT = 1_000_000_000_000_000n; // 1 triệu tỷ đồng: chặn số gõ nhầm quá lớn
 const optionalId = z
@@ -114,6 +113,7 @@ async function validateLinks(
 export async function createTransaction(
   formData: FormData,
 ): Promise<ActionResult> {
+  await requireOwner();
   const parsed = read(formData);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   const { error, data } = await validateLinks(parsed.data);
@@ -129,6 +129,7 @@ export async function createTransaction(
 export async function updateTransaction(
   formData: FormData,
 ): Promise<ActionResult> {
+  await requireOwner();
   const id = String(formData.get("id") ?? "");
   const current = await db.transaction.findUnique({ where: { id } });
   if (!current) return fail("Không tìm thấy giao dịch");
@@ -165,6 +166,7 @@ export async function updateTransaction(
 }
 
 export async function deleteTransaction(id: string): Promise<ActionResult> {
+  await requireOwner();
   const { count } = await db.transaction.deleteMany({ where: { id } });
   if (count === 0) return fail("Không tìm thấy giao dịch");
   refresh();

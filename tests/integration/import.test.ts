@@ -23,7 +23,9 @@ import {
 import { buildStatementXlsx, type FakeRow } from "../fixtures/techcombank";
 
 vi.mock("next/cache", () => ({ refresh: vi.fn() }));
-vi.mock("next/server", () => ({ connection: async () => {} }));
+vi.mock("@/server/auth-guard", () => ({
+  requireOwner: async () => ({ email: "owner@test" }),
+}));
 
 const P = "__test_import__";
 const SENDER = "NGUOI GUI TEST IMPORT";

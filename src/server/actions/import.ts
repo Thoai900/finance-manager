@@ -12,8 +12,7 @@ import { type Analysis, analyzeStatement } from "../import/service";
 import { StatementError } from "../import/techcombank";
 import type { ImportResult, PreviewResult } from "../import/types";
 import { type ActionResult, fail, OK } from "./result";
-
-// TODO(Giai đoạn 2): kiểm tra đăng nhập ở đầu mọi Server Action.
+import { requireOwner } from "../auth-guard";
 
 async function analyze(
   formData: FormData,
@@ -35,6 +34,7 @@ async function analyze(
 export async function previewStatement(
   formData: FormData,
 ): Promise<PreviewResult> {
+  await requireOwner();
   const a = await analyze(formData);
   if ("error" in a) return { ok: false, error: a.error };
   const file = formData.get("file") as File;
@@ -91,6 +91,7 @@ const choicesSchema = z.object({
 export async function importStatement(
   formData: FormData,
 ): Promise<ImportResult> {
+  await requireOwner();
   let choices: z.infer<typeof choicesSchema>;
   try {
     choices = choicesSchema.parse(
@@ -225,6 +226,7 @@ export async function importStatement(
 
 /** Hoàn tác cả một lần nhập: xoá các giao dịch của lần đó và trả lại số dư ban đầu nếu lần đó đã đặt. */
 export async function undoImport(batchId: string): Promise<ActionResult> {
+  await requireOwner();
   const batch = await db.importBatch.findUnique({ where: { id: batchId } });
   if (!batch) return fail("Không tìm thấy lần nhập");
   await db.$transaction(async (tx) => {

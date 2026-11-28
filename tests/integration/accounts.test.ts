@@ -9,6 +9,9 @@ import {
 } from "@/server/actions/accounts";
 
 vi.mock("next/cache", () => ({ refresh: vi.fn() }));
+vi.mock("@/server/auth-guard", () => ({
+  requireOwner: async () => ({ email: "owner@test" }),
+}));
 
 const PREFIX = "__test_account__";
 const form = (values: Record<string, string>) => {
