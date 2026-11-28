@@ -2,6 +2,7 @@
 
 import {
   ArrowLeftRight,
+  LogOut,
   FileUp,
   LayoutDashboard,
   PiggyBank,
@@ -11,6 +12,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 import { cn } from "@/lib/cn";
+import { logout } from "@/server/actions/auth";
+import { GlassButton } from "./glass/glass-button";
 import { ThemeToggle } from "./theme-toggle";
 
 const NAV_ITEMS = [
@@ -73,8 +76,9 @@ export function Sidebar() {
       <nav aria-label="Điều hướng chính" className="flex flex-col gap-1">
         <Links layout="sidebar" />
       </nav>
-      <div className="mt-auto">
+      <div className="mt-auto flex flex-col items-start gap-2">
         <ThemeToggle />
+        <LogoutButton />
       </div>
     </aside>
   );
@@ -88,5 +92,16 @@ export function BottomNav() {
     >
       <Links layout="bottom" />
     </nav>
+  );
+}
+
+export function LogoutButton() {
+  return (
+    <form action={logout}>
+      <GlassButton type="submit">
+        <LogOut className="size-4" aria-hidden />
+        Đăng xuất
+      </GlassButton>
+    </form>
   );
 }

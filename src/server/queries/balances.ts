@@ -1,6 +1,6 @@
-import { connection } from "next/server";
 import { computeBalances } from "@/lib/balance";
 import { db } from "@/lib/db";
+import { requireOwner } from "@/server/auth-guard";
 
 type Client = Pick<typeof db, "account" | "transaction">;
 
@@ -41,6 +41,6 @@ export async function loadBalances(
 
 /** Số dư hiện tại của mọi ví (kể cả ví đã lưu trữ), cho trang hiển thị. */
 export async function getAccountBalances(): Promise<Map<string, bigint>> {
-  await connection();
+  await requireOwner();
   return loadBalances();
 }

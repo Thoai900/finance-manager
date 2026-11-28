@@ -49,7 +49,7 @@
 |---|---|---|
 | Framework | **Next.js (App Router) + TypeScript** | Frontend + backend chung một repo, Server Actions |
 | UI | **Tailwind CSS** + component tự viết theo kiểu shadcn/ui, dùng **Radix UI** cho phần cần xử lý bàn phím/focus (dialog…) | Dễ tùy biến thành phong cách glass. Không dùng CLI shadcn vì môi trường làm việc không truy cập được registry của nó |
-| Biểu đồ | **Recharts** | Tùy chỉnh màu/nền trong suốt dễ dàng |
+| Biểu đồ | HTML/CSS tự viết (không dùng thư viện) | Chỉ có 2 biểu đồ đơn giản; dễ làm tooltip, bàn phím, bảng số liệu và hợp giao diện kính |
 | Database | **PostgreSQL** (Neon) | Gói miễn phí, có backup |
 | ORM | **Prisma** | Schema + migration dễ đọc |
 | Auth | **Auth.js** – Google, session JWT, chỉ cho phép `OWNER_EMAIL` | Không cần bảng user/session trong DB |
@@ -260,6 +260,11 @@ tests/
 
 **Kiểm tra:** email khác đăng nhập → bị từ chối; chưa đăng nhập → về `/login`.
 
+**Đã làm (ghi chú triển khai):**
+- Auth.js `next-auth@5.0.0-beta.32` (ghim phiên bản), Google, phiên JWT trong cookie, chỉ email `OWNER_EMAIL` đã được Google xác minh. Chưa đặt `OWNER_EMAIL` → không ai vào được.
+- Kiểm tra thật nằm ở `requireOwner()` (`src/server/auth-guard.ts`), gọi đầu mọi hàm đọc dữ liệu và mọi Server Action; `src/proxy.ts` chỉ chặn sớm khi chưa có cookie.
+- Test: mọi Server Action bị từ chối khi chưa đăng nhập (không ghi gì); E2E dùng cookie phiên ký bằng `AUTH_SECRET` của môi trường test (không có cửa sau trong app).
+
 ### Giai đoạn 3 — Ví & Danh mục (1,5 ngày)
 
 - CRUD ví và danh mục. Dữ liệu mặc định (ví Techcombank + danh mục) nằm trong một migration SQL, nên tự có ở mọi môi trường khi chạy `prisma migrate deploy`.
@@ -307,11 +312,24 @@ tests/
 
 **Kiểm tra:** unit test %, gồm giao dịch 23:30 ngày cuối tháng (giờ VN).
 
+**Đã làm (ghi chú triển khai):**
+- Chỉ đặt ngân sách cho danh mục chi không bị đánh dấu "không tính vào thống kê"; chuyển khoản và khoản thu không tính.
+- Tổng ngân sách không tính trùng khi cả danh mục cha và con cùng có ngân sách (chỉ cộng ngân sách "trên cùng").
+- Trạng thái hiển thị bằng cả màu và chữ ("Sắp hết", "Vượt …"); thanh tiến độ có `role="progressbar"`.
+- Chép ngân sách tháng trước: chỉ thêm danh mục chưa có ngân sách ở tháng này.
+
 ### Giai đoạn 7 — Dashboard (2 ngày)
 
 - Truy vấn tổng hợp, biểu đồ, empty state.
 
 **Kiểm tra:** với dữ liệu seed cố định, số liệu khớp với tính tay; chuyển khoản không bị tính vào thu/chi.
+
+**Đã làm (ghi chú triển khai):**
+- 4 thẻ số: tổng số dư, thu, chi, chênh lệch tháng này.
+- Thu/chi 6 tháng: cột nhóm, một trục, chú thích, tooltip khi rê chuột và khi focus bằng bàn phím, kèm "Xem dạng bảng".
+- Chi theo danh mục: **thanh ngang xếp hạng** (thay cho biểu đồ tròn — so sánh các phần chính xác hơn), con gộp vào cha, tối đa 6 dòng (đuôi gộp "Khác").
+- Màu biểu đồ: xanh dương = Thu, cam = Chi — đã chạy bộ kiểm tra màu cho người mù màu trên nền sáng/tối; không dùng cặp xanh lá/đỏ. Cam trên nền sáng có tương phản thấp nên luôn có nhãn số + bảng đi kèm.
+- Ngân sách cần chú ý (từ 80%) và 5 giao dịch gần nhất; trang trống có lối tắt "Nhập sao kê"/"Thêm giao dịch".
 
 ### Giai đoạn 8 — Hoàn thiện & phát hành (2 ngày)
 

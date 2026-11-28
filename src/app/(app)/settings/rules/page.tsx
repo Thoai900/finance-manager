@@ -1,5 +1,4 @@
 import { Plus } from "lucide-react";
-import { connection } from "next/server";
 import { Suspense } from "react";
 import { GlassButton } from "@/components/glass/glass-button";
 import { GlassCard } from "@/components/glass/glass-card";
@@ -12,6 +11,7 @@ import type { CategoryOption } from "@/components/transactions/transaction-dialo
 import { db } from "@/lib/db";
 import { sortRules } from "@/server/import/categorize";
 import { listCategoryTree } from "@/server/queries/categories";
+import { requireOwner } from "@/server/auth-guard";
 
 const FIELD_LABELS = {
   counterparty: "Đối tác",
@@ -19,7 +19,7 @@ const FIELD_LABELS = {
 } as const;
 
 async function RuleList() {
-  await connection();
+  await requireOwner();
   const [rules, tree] = await Promise.all([
     db.categoryRule.findMany(),
     listCategoryTree(),

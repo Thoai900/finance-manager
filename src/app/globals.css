@@ -13,6 +13,10 @@
   --fg-muted: #334155;
   --income: #166534;
   --expense: #be123c;
+  --warning: #92400e;
+  /* Biểu đồ: cặp màu đã kiểm tra cho người mù màu (xanh = Thu, cam = Chi), không dùng xanh lá/đỏ. */
+  --chart-income: #257de0;
+  --chart-expense: #f47230;
   --accent: #6d28d9;
   --accent-fg: #ffffff;
 
@@ -34,6 +38,9 @@
   --fg-muted: #cbd5e1;
   --income: #4ade80;
   --expense: #fb7185;
+  --warning: #fbbf24;
+  --chart-income: #338ced;
+  --chart-expense: #e76624;
   --accent: #7c3aed;
   --accent-fg: #ffffff;
 
@@ -50,6 +57,9 @@
   --color-fg-muted: var(--fg-muted);
   --color-income: var(--income);
   --color-expense: var(--expense);
+  --color-warning: var(--warning);
+  --color-chart-income: var(--chart-income);
+  --color-chart-expense: var(--chart-expense);
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-fg);
   --color-glass-border: var(--glass-border);

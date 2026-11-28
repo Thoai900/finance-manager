@@ -5,8 +5,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { normalizeVn } from "@/lib/vn-text";
 import { type ActionResult, fail, OK } from "./result";
-
-// TODO(Giai đoạn 2): kiểm tra đăng nhập ở đầu mọi Server Action.
+import { requireOwner } from "../auth-guard";
 
 const ruleSchema = z.object({
   field: z.enum(["counterparty", "description"], {
@@ -42,6 +41,7 @@ async function read(formData: FormData) {
 }
 
 export async function createRule(formData: FormData): Promise<ActionResult> {
+  await requireOwner();
   const { error, data } = await read(formData);
   if (error) return fail(error);
   await db.categoryRule.create({ data: data! });
@@ -50,6 +50,7 @@ export async function createRule(formData: FormData): Promise<ActionResult> {
 }
 
 export async function updateRule(formData: FormData): Promise<ActionResult> {
+  await requireOwner();
   const id = String(formData.get("id") ?? "");
   const { error, data } = await read(formData);
   if (error) return fail(error);
@@ -63,6 +64,7 @@ export async function updateRule(formData: FormData): Promise<ActionResult> {
 }
 
 export async function deleteRule(id: string): Promise<ActionResult> {
+  await requireOwner();
   const { count } = await db.categoryRule.deleteMany({ where: { id } });
   if (count === 0) return fail("Không tìm thấy quy tắc");
   refresh();

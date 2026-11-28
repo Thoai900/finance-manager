@@ -1,6 +1,7 @@
 import { ChevronRight, Tags, Wallet, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { GlassCard } from "@/components/glass/glass-card";
+import { LogoutButton } from "@/components/app-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const LINKS = [
@@ -55,6 +56,12 @@ export default function SettingsPage() {
           <p className="text-fg-muted">Giao diện</p>
           <div>
             <ThemeToggle />
+          </div>
+        </GlassCard>
+        <GlassCard className="flex flex-col gap-3">
+          <p className="text-fg-muted">Tài khoản</p>
+          <div>
+            <LogoutButton />
           </div>
         </GlassCard>
       </div>

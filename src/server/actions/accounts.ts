@@ -5,8 +5,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { parseVnd } from "@/lib/money";
 import { type ActionResult, fail, OK } from "./result";
-
-// TODO(Giai đoạn 2): kiểm tra đăng nhập ở đầu mọi Server Action.
+import { requireOwner } from "../auth-guard";
 
 const accountSchema = z.object({
   name: z
@@ -39,6 +38,7 @@ function readAccount(formData: FormData) {
 }
 
 export async function createAccount(formData: FormData): Promise<ActionResult> {
+  await requireOwner();
   const parsed = readAccount(formData);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
   await db.account.create({ data: parsed.data });
@@ -47,6 +47,7 @@ export async function createAccount(formData: FormData): Promise<ActionResult> {
 }
 
 export async function updateAccount(formData: FormData): Promise<ActionResult> {
+  await requireOwner();
   const id = String(formData.get("id") ?? "");
   const parsed = readAccount(formData);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
@@ -63,6 +64,7 @@ export async function setAccountArchived(
   id: string,
   archived: boolean,
 ): Promise<ActionResult> {
+  await requireOwner();
   const { count } = await db.account.updateMany({
     where: { id },
     data: { archived },
@@ -73,6 +75,7 @@ export async function setAccountArchived(
 }
 
 export async function deleteAccount(id: string): Promise<ActionResult> {
+  await requireOwner();
   const used = await db.transaction.count({
     where: { OR: [{ accountId: id }, { toAccountId: id }] },
   });

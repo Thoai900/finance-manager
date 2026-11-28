@@ -22,6 +22,11 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/finance_manager?schema=public
+      # Giá trị chỉ dùng cho test, không phải bí mật thật.
+      AUTH_SECRET: ci-test-secret-not-used-in-production-0000000000
+      AUTH_GOOGLE_ID: ci-placeholder
+      AUTH_GOOGLE_SECRET: ci-placeholder
+      OWNER_EMAIL: owner@example.com
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
