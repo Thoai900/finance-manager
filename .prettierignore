@@ -3,3 +3,5 @@ prisma/migrations/
 package-lock.json
 PLAN.md
 AGENTS.md
+test-results/
+playwright-report/

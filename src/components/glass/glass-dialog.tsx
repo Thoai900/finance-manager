@@ -26,7 +26,7 @@ export function GlassDialog({
       <Dialog.Portal>
         {/* Lớp phủ chỉ làm tối, không làm mờ, để không có hai lớp blur chồng nhau. */}
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40" />
-        <Dialog.Content className="glass-strong fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl p-6 text-fg">
+        <Dialog.Content className="glass-strong fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md overflow-y-auto -translate-x-1/2 -translate-y-1/2 rounded-2xl p-6 text-fg">
           <Dialog.Title className="text-lg font-semibold">{title}</Dialog.Title>
           {description ? (
             <Dialog.Description className="mt-1 text-sm text-fg-muted">

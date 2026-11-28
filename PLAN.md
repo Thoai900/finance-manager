@@ -271,6 +271,10 @@ tests/
 ### Giai đoạn 4 — Giao dịch (3 ngày)
 
 - Form thu/chi/chuyển khoản, danh sách + lọc + tìm kiếm, hàm tính số dư.
+- Ngày nhập tay được lưu là 00:00 giờ Việt Nam của ngày đó. Thu/chi bắt buộc có danh mục; chuyển khoản không có danh mục.
+- Không ghi giao dịch mới vào ví đã lưu trữ (giao dịch cũ của ví đó vẫn sửa được).
+- Tìm kiếm hiện phân biệt dấu ("ca phe" không ra "cà phê"). Tìm không dấu cần thêm cột chuẩn hoá — làm cùng `lib/vn-text.ts` ở giai đoạn 5.
+- E2E chạy bằng Playwright (máy tính + điện thoại) trong CI.
 
 **Kiểm tra:** unit test số dư (có chuyển khoản, sửa, xóa); E2E: thêm khoản chi → số dư giảm đúng.
 

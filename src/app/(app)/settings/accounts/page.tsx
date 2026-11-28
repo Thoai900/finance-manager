@@ -10,9 +10,13 @@ import {
 import { ACCOUNT_TYPE_LABELS } from "@/lib/labels";
 import { formatVnd, formatVndPlain } from "@/lib/money";
 import { listAccounts } from "@/server/queries/accounts";
+import { getAccountBalances } from "@/server/queries/balances";
 
 async function AccountList() {
-  const accounts = await listAccounts();
+  const [accounts, balances] = await Promise.all([
+    listAccounts(),
+    getAccountBalances(),
+  ]);
   if (accounts.length === 0) {
     return <p className="p-5 text-fg-muted">Chưa có ví nào.</p>;
   }
@@ -23,7 +27,7 @@ async function AccountList() {
           key={a.id}
           className={`flex flex-wrap items-center justify-between gap-3 px-5 py-4 ${i > 0 ? "border-t border-glass-border" : ""}`}
         >
-          <div className={a.archived ? "opacity-70" : undefined}>
+          <div>
             <p className="font-medium">
               {a.name}
               {a.archived ? (
@@ -31,6 +35,12 @@ async function AccountList() {
                   Đã lưu trữ
                 </span>
               ) : null}
+            </p>
+            <p
+              className="text-lg font-semibold tabular-nums"
+              data-testid="balance"
+            >
+              {formatVnd(balances.get(a.id) ?? a.initialBalance)}
             </p>
             <p className="text-sm text-fg-muted">
               {ACCOUNT_TYPE_LABELS[a.type]} · Số dư ban đầu{" "}
