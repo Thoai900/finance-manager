@@ -210,7 +210,7 @@ src/
   schemas/
 prisma/
   schema.prisma
-  seed.ts              # danh mục + quy tắc mặc định
+  migrations/          # gồm cả dữ liệu mặc định (ví Techcombank, danh mục) dạng migration SQL
 tests/
   unit/  e2e/
   fixtures/statements/ # file sao kê GIẢ theo cấu trúc Techcombank
@@ -262,7 +262,8 @@ tests/
 
 ### Giai đoạn 3 — Ví & Danh mục (1,5 ngày)
 
-- CRUD ví và danh mục. Seed danh mục mặc định.
+- CRUD ví và danh mục. Dữ liệu mặc định (ví Techcombank + danh mục) nằm trong một migration SQL, nên tự có ở mọi môi trường khi chạy `prisma migrate deploy`.
+- Ví đã có giao dịch không xoá được (chỉ lưu trữ). Danh mục có giao dịch hoặc có danh mục con không xoá được. Không đổi loại thu/chi của danh mục sau khi tạo.
 - `lib/money.ts`: format `1.250.000 đ`, parse input.
 
 **Kiểm tra:** unit test format/parse tiền; thao tác CRUD qua UI.
