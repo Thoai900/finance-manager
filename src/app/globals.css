@@ -1,26 +1,110 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Token giao diện glassmorphism — xem PLAN.md mục 5. Chỉ đổi giá trị ở đây, không viết số cứng trong component. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #eef2ff;
+  --blob-1: rgb(167 139 250 / 0.55);
+  --blob-2: rgb(125 211 252 / 0.55);
+  --blob-3: rgb(249 168 212 / 0.5);
+
+  --fg: #0f172a;
+  --fg-muted: #334155;
+  --income: #166534;
+  --expense: #be123c;
+  --accent: #6d28d9;
+  --accent-fg: #ffffff;
+
+  --glass-bg: rgb(255 255 255 / 0.45);
+  --glass-bg-strong: rgb(255 255 255 / 0.7);
+  --glass-fallback: rgb(255 255 255 / 0.88);
+  --glass-border: rgb(255 255 255 / 0.6);
+  --glass-shadow: 0 8px 32px rgb(30 27 75 / 0.12);
+  --glass-blur: 20px;
+}
+
+.dark {
+  --bg: #0b1020;
+  --blob-1: rgb(124 58 237 / 0.45);
+  --blob-2: rgb(37 99 235 / 0.4);
+  --blob-3: rgb(219 39 119 / 0.35);
+
+  --fg: #f8fafc;
+  --fg-muted: #cbd5e1;
+  --income: #4ade80;
+  --expense: #fb7185;
+  --accent: #7c3aed;
+  --accent-fg: #ffffff;
+
+  --glass-bg: rgb(15 23 42 / 0.3);
+  --glass-bg-strong: rgb(15 23 42 / 0.6);
+  --glass-fallback: rgb(15 23 42 / 0.88);
+  --glass-border: rgb(255 255 255 / 0.12);
+  --glass-shadow: 0 8px 32px rgb(0 0 0 / 0.35);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-income: var(--income);
+  --color-expense: var(--expense);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-glass-border: var(--glass-border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/*
+ * Lớp kính. Mặc định là nền gần đặc (cho trình duyệt không hỗ trợ backdrop-filter);
+ * chỉ trong suốt + làm mờ khi được hỗ trợ; quay về nền đặc nếu người dùng bật "giảm trong suốt".
+ * Không lồng kính trong kính; không dùng cho từng dòng của bảng dài.
+ * `.glass-strong`: kính đục hơn cho vùng nhiều chữ (bảng giao dịch, xem trước sao kê, form).
+ */
+@layer components {
+  .glass {
+    --glass-layer: var(--glass-bg);
+  }
+  .glass-strong {
+    --glass-layer: var(--glass-bg-strong);
+  }
+  .glass,
+  .glass-strong {
+    background: var(--glass-fallback);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+
+    @supports (backdrop-filter: blur(1px)) or
+      (-webkit-backdrop-filter: blur(1px)) {
+      background: var(--glass-layer);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+      backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    }
+
+    @media (prefers-reduced-transparency: reduce) {
+      background: var(--glass-fallback);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+/* Nền gradient cố định phía sau mọi thứ. Dùng radial-gradient thay cho blob + filter: blur để nhẹ GPU. */
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(40rem 40rem at 10% 5%, var(--blob-1), transparent 60%),
+    radial-gradient(36rem 36rem at 95% 25%, var(--blob-2), transparent 60%),
+    radial-gradient(46rem 46rem at 45% 105%, var(--blob-3), transparent 60%),
+    var(--bg);
 }

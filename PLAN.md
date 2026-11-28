@@ -48,7 +48,7 @@
 | Lớp | Lựa chọn | Lý do |
 |---|---|---|
 | Framework | **Next.js (App Router) + TypeScript** | Frontend + backend chung một repo, Server Actions |
-| UI | **Tailwind CSS + shadcn/ui** | Dễ tùy biến thành phong cách glass, có sẵn form/table/dialog |
+| UI | **Tailwind CSS** + component tự viết theo kiểu shadcn/ui, dùng **Radix UI** cho phần cần xử lý bàn phím/focus (dialog…) | Dễ tùy biến thành phong cách glass. Không dùng CLI shadcn vì môi trường làm việc không truy cập được registry của nó |
 | Biểu đồ | **Recharts** | Tùy chỉnh màu/nền trong suốt dễ dàng |
 | Database | **PostgreSQL** (Neon) | Gói miễn phí, có backup |
 | ORM | **Prisma** | Schema + migration dễ đọc |
@@ -165,9 +165,11 @@ Chỉ có một ngân hàng nên **không làm màn hình ghép cột** ở MVP;
 - **Biểu đồ**: nền trong suốt, đường lưới mờ, màu đồng bộ với gradient nền.
 - Có cả **chế độ sáng và tối**. Chế độ tối thường hợp glassmorphism hơn, nên đặt làm mặc định.
 
-### Thành phần dùng chung (bọc lại shadcn/ui)
+### Thành phần dùng chung
 
-- `GlassCard`, `GlassPanel` (sidebar/thanh điều hướng dưới trên mobile), `GlassDialog`, `GlassInput`, `GlassButton`, `StatTile` (thẻ con số trên dashboard).
+- `GlassCard` (thuộc tính `strong` cho kính đục), `GlassDialog`, `GlassInput`, `GlassButton`, `StatTile` (thẻ con số trên dashboard).
+- Lớp CSS `glass` / `glass-strong` dùng trực tiếp cho sidebar và thanh điều hướng dưới.
+- **Ký hiệu tiền: dùng chữ `đ`** (`1.250.000 đ`), vì font Geist không có ký tự `₫` (sẽ hiển thị bằng font khác, lệch kiểu).
 - Khai báo token trong Tailwind config: độ mờ, độ trong, màu viền, bóng. Không viết số cứng rải rác trong code.
 
 ### Rủi ro riêng của phong cách này
@@ -191,7 +193,7 @@ src/
     api/auth/[...nextauth]/
     dev/ui/            # trang xem thử toàn bộ component glass (chỉ bật ở local)
   components/
-    glass/             # GlassCard, GlassPanel, GlassDialog...
+    glass/             # GlassCard, GlassDialog, GlassInput, GlassButton, StatTile
     charts/  forms/
   lib/
     db.ts  auth.ts
@@ -222,8 +224,8 @@ tests/
 2. **Dashboard**: các `StatTile` (tổng số dư, thu, chi tháng này), biểu đồ tròn theo danh mục, biểu đồ cột 6 tháng, giao dịch gần đây, ngân sách sắp vượt.
 3. **Giao dịch**: bảng + bộ lọc, nút "+" thêm nhanh. Lọc được theo "nhập từ sao kê" / "nhập tay".
 4. **Nhập sao kê**: tải file → xem trước → kết quả. Kèm lịch sử các lần nhập (có nút hoàn tác cả một lần nhập).
-5. **Ví**: danh sách ví và số dư.
-6. **Danh mục & quy tắc**: quản lý danh mục và quy tắc tự phân loại.
+5. **Ví**: danh sách ví và số dư (vào từ Cài đặt).
+6. **Danh mục & quy tắc**: quản lý danh mục và quy tắc tự phân loại (vào từ Cài đặt).
 7. **Ngân sách**: chọn tháng, đặt hạn mức, thanh tiến độ, copy từ tháng trước.
 8. **Cài đặt**: chế độ sáng/tối, xuất CSV, xóa dữ liệu.
 
@@ -245,7 +247,7 @@ tests/
 
 - Nền gradient, token trong Tailwind, các component `glass/*`, chế độ sáng/tối.
 - Trang `/dev/ui` hiển thị mọi component.
-- Layout chính: sidebar (desktop), thanh điều hướng dưới (mobile).
+- Layout chính: sidebar (desktop), thanh điều hướng dưới (mobile), 5 mục: Tổng quan, Giao dịch, Nhập sao kê, Ngân sách, Cài đặt.
 
 **Kiểm tra:**
 - Đo tương phản chữ/số tiền trên nền kính đạt ≥ 4.5:1 ở cả 2 chế độ.
@@ -261,7 +263,7 @@ tests/
 ### Giai đoạn 3 — Ví & Danh mục (1,5 ngày)
 
 - CRUD ví và danh mục. Seed danh mục mặc định.
-- `lib/money.ts`: format `1.250.000 ₫`, parse input.
+- `lib/money.ts`: format `1.250.000 đ`, parse input.
 
 **Kiểm tra:** unit test format/parse tiền; thao tác CRUD qua UI.
 
