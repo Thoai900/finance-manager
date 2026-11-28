@@ -49,3 +49,9 @@ export function vnDateRange(
   if (end) range.lt = new Date(end.getTime() + 24 * 60 * 60 * 1000);
   return range;
 }
+
+/** "2026-11-28" → "28/11/2026". */
+export function isoToDmy(isoDate: string): string {
+  const [y, m, d] = isoDate.split("-");
+  return `${d}/${m}/${y}`;
+}

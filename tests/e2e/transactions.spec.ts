@@ -16,13 +16,13 @@ test.afterAll(async () => {
 });
 
 async function techcombankBalance(page: Page) {
-  await page.goto("/settings/accounts");
+  await page.goto("/settings/accounts", { waitUntil: "networkidle" });
   // React có thể giữ nội dung mới trong vùng ẩn vài trăm ms trước khi hiện: chờ chỉ còn một bản.
-  await expect(page.getByTestId("balance")).toHaveCount(1);
-  const text = await page
+  const balance = page
     .locator("li", { hasText: "Techcombank" })
-    .getByTestId("balance")
-    .innerText();
+    .getByTestId("balance");
+  await expect(balance).toHaveCount(1);
+  const text = await balance.innerText();
   const value = parseVnd(text);
   expect(value).not.toBeNull();
   return value!;

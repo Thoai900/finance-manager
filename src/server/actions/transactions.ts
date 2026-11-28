@@ -5,6 +5,7 @@ import { z } from "zod";
 import { vnDateToUtc } from "@/lib/dates";
 import { db } from "@/lib/db";
 import { parseVnd } from "@/lib/money";
+import { buildSearchText } from "@/lib/vn-text";
 import { type ActionResult, fail, OK } from "./result";
 
 // TODO(Giai đoạn 2): kiểm tra đăng nhập ở đầu mọi Server Action.
@@ -118,7 +119,9 @@ export async function createTransaction(
   const { error, data } = await validateLinks(parsed.data);
   if (error) return fail(error);
   const { date, ...rest } = data!;
-  await db.transaction.create({ data: { ...rest, occurredAt: date } });
+  await db.transaction.create({
+    data: { ...rest, occurredAt: date, searchText: buildSearchText(rest.note) },
+  });
   refresh();
   return OK;
 }
@@ -131,12 +134,31 @@ export async function updateTransaction(
   if (!current) return fail("Không tìm thấy giao dịch");
   const parsed = read(formData);
   if (!parsed.success) return fail(parsed.error.issues[0].message);
+  // Giao dịch từ sao kê: giữ nguyên số tiền/ngày/ví/loại để đối chiếu với ngân hàng vẫn đúng.
+  if (current.importBatchId) {
+    const p = parsed.data;
+    const changed =
+      p.type !== current.type ||
+      p.amount !== current.amount ||
+      p.accountId !== current.accountId ||
+      p.date.getTime() !== current.occurredAt.getTime();
+    if (changed)
+      return fail("Giao dịch từ sao kê chỉ sửa được danh mục và ghi chú");
+  }
   const { error, data } = await validateLinks(parsed.data, current);
   if (error) return fail(error);
   const { date, ...rest } = data!;
   await db.transaction.update({
     where: { id },
-    data: { ...rest, occurredAt: date },
+    data: {
+      ...rest,
+      occurredAt: date,
+      searchText: buildSearchText(
+        rest.note,
+        current.rawDescription,
+        current.counterparty,
+      ),
+    },
   });
   refresh();
   return OK;

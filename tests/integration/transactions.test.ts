@@ -275,6 +275,11 @@ describe("lọc danh sách", () => {
     expect(await notes({ q: "CƠM" })).toEqual(["Cơm trưa"]);
   });
 
+  test("tìm không dấu", async () => {
+    expect(await notes({ q: "ca phe" })).toEqual(["Cà phê sữa"]);
+    expect(await notes({ q: "COM TRUA" })).toEqual(["Cơm trưa"]);
+  });
+
   test("bỏ qua tham số lạ", () => {
     expect(parseTxFilters({ type: "abc", page: "-3", source: "x" })).toEqual({
       from: undefined,

@@ -169,6 +169,12 @@ async function TransactionsContent({
                         toAccountId: tx.toAccountId,
                         categoryId: tx.categoryId,
                         note: tx.note ?? "",
+                        source: tx.importBatchId
+                          ? {
+                              counterparty: tx.counterparty,
+                              description: tx.rawDescription,
+                            }
+                          : null,
                       }}
                       trigger={
                         <button

@@ -2,18 +2,26 @@ import { connection } from "next/server";
 import { computeBalances } from "@/lib/balance";
 import { db } from "@/lib/db";
 
-/** Số dư hiện tại của mọi ví (kể cả ví đã lưu trữ). */
-export async function getAccountBalances(): Promise<Map<string, bigint>> {
-  await connection();
+type Client = Pick<typeof db, "account" | "transaction">;
+
+/** Tính số dư; `accountId` để giới hạn một ví. Dùng được trong Server Action và transaction DB. */
+export async function loadBalances(
+  accountId?: string,
+  client: Client = db,
+): Promise<Map<string, bigint>> {
   const [accounts, outgoing, incoming] = await Promise.all([
-    db.account.findMany({ select: { id: true, initialBalance: true } }),
-    db.transaction.groupBy({
+    client.account.findMany({
+      where: accountId ? { id: accountId } : undefined,
+      select: { id: true, initialBalance: true },
+    }),
+    client.transaction.groupBy({
       by: ["accountId", "type"],
+      where: accountId ? { accountId } : undefined,
       _sum: { amount: true },
     }),
-    db.transaction.groupBy({
+    client.transaction.groupBy({
       by: ["toAccountId"],
-      where: { type: "transfer", toAccountId: { not: null } },
+      where: { type: "transfer", toAccountId: accountId ?? { not: null } },
       _sum: { amount: true },
     }),
   ]);
@@ -29,4 +37,10 @@ export async function getAccountBalances(): Promise<Map<string, bigint>> {
       total: r._sum.amount ?? 0n,
     })),
   );
+}
+
+/** Số dư hiện tại của mọi ví (kể cả ví đã lưu trữ), cho trang hiển thị. */
+export async function getAccountBalances(): Promise<Map<string, bigint>> {
+  await connection();
+  return loadBalances();
 }

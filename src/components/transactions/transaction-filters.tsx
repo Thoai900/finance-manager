@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { TxFilters } from "@/server/queries/transactions";
+import { type TxFilters, UNCATEGORIZED } from "@/server/queries/transactions";
 import { FormField } from "../form-field";
 import { GlassButton } from "../glass/glass-button";
 import { GlassInput } from "../glass/glass-input";
@@ -52,6 +52,7 @@ export function TransactionFilters({
         <FormField label="Danh mục">
           <GlassSelect name="category" defaultValue={filters.categoryId ?? ""}>
             <option value="">Tất cả</option>
+            <option value={UNCATEGORIZED}>Chưa phân loại</option>
             {categories.flatMap((c) => [
               <option key={c.id} value={c.id}>
                 {c.name}

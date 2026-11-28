@@ -2,8 +2,11 @@ import { connection } from "next/server";
 import type { Prisma } from "@/generated/prisma/client";
 import { vnDateRange } from "@/lib/dates";
 import { db } from "@/lib/db";
+import { normalizeVn } from "@/lib/vn-text";
 
 export const PAGE_SIZE = 50;
+/** Giá trị bộ lọc danh mục cho giao dịch thu/chi chưa có danh mục. */
+export const UNCATEGORIZED = "none";
 
 export type TxFilters = {
   from?: string;
@@ -52,7 +55,9 @@ export function buildTxWhere(f: TxFilters): Prisma.TransactionWhereInput {
       OR: [{ accountId: f.accountId }, { toAccountId: f.accountId }],
     });
   // Lọc theo danh mục cha thì gồm cả danh mục con.
-  if (f.categoryId) {
+  if (f.categoryId === UNCATEGORIZED) {
+    and.push({ categoryId: null, type: { not: "transfer" } });
+  } else if (f.categoryId) {
     and.push({
       OR: [
         { categoryId: f.categoryId },
@@ -63,16 +68,9 @@ export function buildTxWhere(f: TxFilters): Prisma.TransactionWhereInput {
   if (f.type) and.push({ type: f.type });
   if (f.source === "manual") and.push({ importBatchId: null });
   if (f.source === "import") and.push({ importBatchId: { not: null } });
-  if (f.q) {
-    const contains = { contains: f.q, mode: "insensitive" as const };
-    and.push({
-      OR: [
-        { note: contains },
-        { rawDescription: contains },
-        { counterparty: contains },
-      ],
-    });
-  }
+  // Tìm không dấu: "ca phe" khớp "Cà phê".
+  const q = f.q ? normalizeVn(f.q) : "";
+  if (q) and.push({ searchText: { contains: q } });
   return { AND: and };
 }
 

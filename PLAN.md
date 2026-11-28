@@ -273,7 +273,7 @@ tests/
 - Form thu/chi/chuyển khoản, danh sách + lọc + tìm kiếm, hàm tính số dư.
 - Ngày nhập tay được lưu là 00:00 giờ Việt Nam của ngày đó. Thu/chi bắt buộc có danh mục; chuyển khoản không có danh mục.
 - Không ghi giao dịch mới vào ví đã lưu trữ (giao dịch cũ của ví đó vẫn sửa được).
-- Tìm kiếm hiện phân biệt dấu ("ca phe" không ra "cà phê"). Tìm không dấu cần thêm cột chuẩn hoá — làm cùng `lib/vn-text.ts` ở giai đoạn 5.
+- Tìm kiếm không dấu ("ca phe" ra "cà phê") qua cột `search_text` đã chuẩn hoá (làm ở giai đoạn 5).
 - E2E chạy bằng Playwright (máy tính + điện thoại) trong CI.
 
 **Kiểm tra:** unit test số dư (có chuyển khoản, sửa, xóa); E2E: thêm khoản chi → số dư giảm đúng.
@@ -284,6 +284,15 @@ tests/
 - Màn xem trước; lưu trong một transaction DB.
 - Đối chiếu số dư, lịch sử nhập, hoàn tác cả lần nhập.
 - Quản lý `category_rules`; seed vài quy tắc phổ biến (MOCA/Grab, Highlands, Shopee, điện, nước, lãi tiền gửi…).
+
+**Đã làm (ghi chú triển khai):**
+- Đọc .xlsx bằng `exceljs`; ngoài các bước đối chiếu ở mục 4 còn kiểm tra số dư sau **từng dòng** khớp cột Số dư.
+- File tối đa 5 MB; file chỉ đọc trong bộ nhớ. Bước "Nhập" gửi lại file và server đọc lại, không tin số tiền từ trình duyệt.
+- Màn xem trước: đổi danh mục từng dòng; ô "Ghi nhớ cho đối tác này" áp cho mọi dòng cùng đối tác và tạo quy tắc (ưu tiên 10, cao hơn quy tắc mặc định 0).
+- Quy tắc mặc định giả định **MOCA (ví Grab) → Đi lại**; nếu chủ yếu dùng GrabFood thì đổi sang Ăn uống ở trang Quy tắc phân loại.
+- Giao dịch từ sao kê chỉ sửa được danh mục và ghi chú (khoá số tiền/ngày/ví/loại để đối chiếu luôn đúng).
+- Hoàn tác trả lại cả số dư ban đầu nếu lần nhập đó đã đặt nó (cột `initial_balance_before`).
+- Chưa làm: đổi dòng thành chuyển khoản sang ví khác (chỉ cần khi có thêm ví); phát hiện giao dịch **nhập tay** trùng với dòng sao kê (khi đó số dư sẽ lệch và app cảnh báo).
 
 **Kiểm tra:**
 - Unit test với file .xlsx giả có đúng cấu trúc Techcombank (gồm dòng đầu kỳ, cuối kỳ, dòng không có Số bút toán, phụ lục Sinh lời): số dòng, tổng Nợ/Có và số dư cuối khớp.

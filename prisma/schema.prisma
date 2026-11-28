@@ -81,6 +81,8 @@ model Transaction {
   counterpartyBank String?         @map("counterparty_bank")
   importBatchId    String?         @map("import_batch_id")
   importKey        String?         @map("import_key")
+  /// Ghi chú + nội dung + đối tác, đã bỏ dấu, chữ thường — để tìm kiếm không dấu.
+  searchText       String?         @map("search_text")
   createdAt        DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -109,17 +111,19 @@ model Budget {
 }
 
 model ImportBatch {
-  id             String   @id @default(cuid())
-  accountId      String   @map("account_id")
-  fileName       String   @map("file_name")
-  periodFrom     DateTime @map("period_from") @db.Date
-  periodTo       DateTime @map("period_to") @db.Date
-  openingBalance BigInt   @map("opening_balance")
-  closingBalance BigInt   @map("closing_balance")
-  rowCount       Int      @map("row_count")
-  importedCount  Int      @map("imported_count")
-  skippedCount   Int      @map("skipped_count")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  id                   String   @id @default(cuid())
+  accountId            String   @map("account_id")
+  fileName             String   @map("file_name")
+  periodFrom           DateTime @map("period_from") @db.Date
+  periodTo             DateTime @map("period_to") @db.Date
+  openingBalance       BigInt   @map("opening_balance")
+  closingBalance       BigInt   @map("closing_balance")
+  rowCount             Int      @map("row_count")
+  importedCount        Int      @map("imported_count")
+  skippedCount         Int      @map("skipped_count")
+  /// Số dư ban đầu của ví trước khi lần nhập này đặt lại nó (null nếu không đổi), để hoàn tác.
+  initialBalanceBefore BigInt?  @map("initial_balance_before")
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   account      Account       @relation(fields: [accountId], references: [id], onDelete: Restrict)
   transactions Transaction[]

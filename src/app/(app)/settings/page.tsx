@@ -1,4 +1,4 @@
-import { ChevronRight, Tags, Wallet } from "lucide-react";
+import { ChevronRight, Tags, Wallet, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { GlassCard } from "@/components/glass/glass-card";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -15,6 +15,12 @@ const LINKS = [
     label: "Danh mục",
     hint: "Danh mục thu chi",
     icon: Tags,
+  },
+  {
+    href: "/settings/rules",
+    label: "Quy tắc phân loại",
+    hint: "Tự xếp giao dịch sao kê vào danh mục",
+    icon: Wand2,
   },
 ] as const;
 
